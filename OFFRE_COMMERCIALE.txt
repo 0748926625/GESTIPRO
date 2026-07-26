@@ -1,0 +1,90 @@
+GESTIPRO — L'application de gestion pour maquis et petits commerces
+====================================================================
+
+QU'EST-CE QUE GESTIPRO ?
+-------------------------
+GestiPro est une application mobile pensée pour les gérants de maquis
+(et commerces similaires : restaurants, bars, boutiques) en Côte d'Ivoire.
+Elle permet de gérer le stock, les ventes, les recettes/dépenses et les
+rapports d'activité, directement depuis un smartphone — même sans connexion
+internet.
+
+Chaque client dispose de son propre espace sécurisé et indépendant : les
+données d'un maquis ne sont jamais visibles par un autre client.
+
+
+CE QUE GESTIPRO APPORTE AU GÉRANT
+-----------------------------------
+
+1. Gestion de stock simplifiée
+   - Ajout rapide de produits grâce à une liste des boissons courantes
+     vendues en Côte d'Ivoire (bières, sodas, eaux, boissons locales,
+     malt & énergisants, vins & spiritueux)
+   - Suivi en temps réel des quantités en stock
+   - Alertes automatiques dès qu'un produit atteint son seuil critique
+   - Historique des entrées de stock (livraisons)
+
+2. Ventes au quotidien
+   - Enregistrement rapide des ventes, décrément automatique du stock
+   - Choix du mode de paiement à chaque vente : Espèces, Wave, Orange
+     Money, MoMo
+   - Historique complet et détaillé de toutes les ventes
+   - Reçu PDF généré pour chaque vente (téléchargeable ou partageable)
+
+3. Recettes et dépenses diverses
+   - Enregistrement des revenus hors vente de produits (location
+     d'espace, prestations de service, etc.)
+   - Suivi des dépenses (salaires, loyer, électricité, transport...)
+   - Calcul automatique du résultat net (marge des ventes + recettes
+     diverses − dépenses)
+
+4. Rapports et pilotage de l'activité
+   - Statistiques par jour, semaine ou mois
+   - Chiffre d'affaires, marge, résultat net en un coup d'œil
+   - Répartition du chiffre d'affaires par mode de paiement
+   - Classement des produits les plus vendus
+   - Export PDF des rapports (téléchargeable ou partageable)
+
+5. Gestion d'équipe
+   - Un compte "Gérant" avec accès complet
+   - Des comptes "Serveur" à accès restreint (ventes uniquement),
+     protégés par un code PIN individuel à 4 chiffres
+   - Gestion centralisée des comptes du personnel
+
+6. Fonctionne partout, même sans internet
+   - Toutes les données restent disponibles hors ligne
+   - Synchronisation automatique dès qu'une connexion est disponible
+   - Bouton de synchronisation manuelle à tout moment
+   - Accès aux mêmes données depuis plusieurs téléphones (le gérant et
+     ses serveurs peuvent utiliser des appareils différents)
+
+7. Personnalisation
+   - Nom et logo du maquis affichés dans toute l'application et sur
+     les documents exportés (reçus, rapports)
+
+
+POUR QUI ?
+----------
+- Maquis et bars
+- Restaurants et petites restaurations
+- Boutiques et commerces de proximité
+- Tout commerce ayant besoin de suivre stock, ventes et caisse au
+  quotidien, avec une équipe de plusieurs personnes
+
+
+CE QUI DIFFÉRENCIE GESTIPRO
+-----------------------------
+- Pensé pour la réalité du terrain ivoirien : fonctionne sans réseau
+  fiable, intègre les moyens de paiement locaux (Wave, Orange Money, MoMo)
+- Simple d'utilisation : suggestions de produits prêtes à l'emploi,
+  connexion par code PIN pour le personnel
+- Données sécurisées et propres à chaque client (aucun partage entre
+  établissements)
+- Multi-appareils : gérant et serveurs peuvent travailler chacun sur
+  leur téléphone avec les mêmes données à jour
+
+
+À VENIR (prochaines évolutions envisagées)
+--------------------------------------------
+- Connexion simplifiée avec Google
+- Formule d'abonnement et facturation
