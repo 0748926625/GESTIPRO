@@ -13,9 +13,7 @@
       "package": "com.gestipro.app",
       "adaptiveIcon": {
         "backgroundColor": "#9A1B2F",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
