@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { db } from './client';
-import type { Produit, TypeMouvement } from '../types';
+import type { AlerteStock, Produit, TypeMouvement } from '../types';
 
 interface ProduitRow {
   id: string;
@@ -108,10 +108,14 @@ export async function enregistrerMouvementStock(
   quantite: number,
   motif: string,
   userId: string
-): Promise<void> {
+): Promise<AlerteStock | null> {
   const date = new Date().toISOString();
+  let alerte: AlerteStock | null = null;
   await db.withTransactionAsync(async () => {
     const delta = type === 'sortie' ? -quantite : quantite;
+    const avant = await db.getFirstAsync<ProduitRow>('SELECT * FROM produits WHERE id = ?', [
+      produitId,
+    ]);
     await db.runAsync(
       'UPDATE produits SET quantite_stock = quantite_stock + ?, updated_at = ? WHERE id = ?',
       [delta, date, produitId]
@@ -121,5 +125,18 @@ export async function enregistrerMouvementStock(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [Crypto.randomUUID(), etablissementId, produitId, type, quantite, motif, userId, date, date]
     );
+    if (avant && delta < 0) {
+      const quantiteApres = avant.quantite_stock + delta;
+      if (quantiteApres <= avant.seuil_alerte && avant.quantite_stock > avant.seuil_alerte) {
+        alerte = {
+          produitId,
+          nom: avant.nom,
+          quantiteStock: quantiteApres,
+          seuilAlerte: avant.seuil_alerte,
+          unite: avant.unite,
+        };
+      }
+    }
   });
+  return alerte;
 }

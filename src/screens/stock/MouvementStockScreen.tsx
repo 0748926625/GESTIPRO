@@ -19,6 +19,7 @@ import type { StockStackParamList } from '../../navigation/StockStack';
 import { useAuthStore } from '../../store/authStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { colors, spacing } from '../../theme';
+import { declencherAlerteStock } from '../../utils/alerteStock';
 
 type Route = RouteProp<StockStackParamList, 'MouvementStock'>;
 type Nav = NativeStackNavigationProp<StockStackParamList, 'MouvementStock'>;
@@ -42,7 +43,7 @@ export function MouvementStockScreen(): React.JSX.Element {
     }
     if (!currentUser || !etablissementId) return;
     setEnCours(true);
-    await enregistrerMouvementStock(
+    const alerte = await enregistrerMouvementStock(
       etablissementId,
       produitId,
       'entree',
@@ -51,6 +52,9 @@ export function MouvementStockScreen(): React.JSX.Element {
       currentUser.id
     );
     setEnCours(false);
+    if (alerte) {
+      declencherAlerteStock(alerte);
+    }
     navigation.goBack();
   };
 

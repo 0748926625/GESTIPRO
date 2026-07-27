@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { db } from './client';
 import type { ModePaiement } from '../data/modesPaiement';
-import type { VenteAvecLignes, VenteLigneInput } from '../types';
+import type { AlerteStock, VenteAvecLignes, VenteLigneInput } from '../types';
 
 interface VenteRow {
   id: string;
@@ -25,7 +25,7 @@ export async function creerVente(
   userId: string,
   lignes: VenteLigneInput[],
   modePaiement: ModePaiement
-): Promise<string> {
+): Promise<{ id: string; produitsEnAlerte: AlerteStock[] }> {
   if (lignes.length === 0) {
     throw new Error('Une vente doit contenir au moins un produit');
   }
@@ -33,6 +33,7 @@ export async function creerVente(
   const total = lignes.reduce((sum, l) => sum + l.quantite * l.prixUnitaireVente, 0);
   const date = new Date().toISOString();
   const venteId = Crypto.randomUUID();
+  const produitsEnAlerte: AlerteStock[] = [];
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
@@ -41,10 +42,13 @@ export async function creerVente(
     );
 
     for (const ligne of lignes) {
-      const produit = await db.getFirstAsync<{ quantite_stock: number }>(
-        'SELECT quantite_stock FROM produits WHERE id = ?',
-        [ligne.produitId]
-      );
+      const produit = await db.getFirstAsync<{
+        quantite_stock: number;
+        seuil_alerte: number;
+        unite: string;
+      }>('SELECT quantite_stock, seuil_alerte, unite FROM produits WHERE id = ?', [
+        ligne.produitId,
+      ]);
       if (!produit || produit.quantite_stock < ligne.quantite) {
         throw new Error(`Stock insuffisant pour ${ligne.nom}`);
       }
@@ -63,10 +67,21 @@ export async function creerVente(
          VALUES (?, ?, ?, 'sortie', ?, 'Vente', ?, ?, ?)`,
         [Crypto.randomUUID(), etablissementId, ligne.produitId, ligne.quantite, userId, date, date]
       );
+
+      const quantiteApres = produit.quantite_stock - ligne.quantite;
+      if (quantiteApres <= produit.seuil_alerte && produit.quantite_stock > produit.seuil_alerte) {
+        produitsEnAlerte.push({
+          produitId: ligne.produitId,
+          nom: ligne.nom,
+          quantiteStock: quantiteApres,
+          seuilAlerte: produit.seuil_alerte,
+          unite: produit.unite,
+        });
+      }
     }
   });
 
-  return venteId;
+  return { id: venteId, produitsEnAlerte };
 }
 
 async function chargerVenteAvecLignes(v: VenteRow): Promise<VenteAvecLignes> {

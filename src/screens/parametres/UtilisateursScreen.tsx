@@ -21,13 +21,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { saveEtablissement } from '../../db/etablissement';
+import { createFournisseur, getFournisseurs, setFournisseurActif } from '../../db/fournisseurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
 import { getDerniereSynchro, synchroniser } from '../../sync';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
-import type { Role, User } from '../../types';
+import type { Fournisseur, Role, User } from '../../types';
 
 async function copierLogoLocalement(sourceUri: string): Promise<string> {
   const dest = `${FileSystem.documentDirectory}logo-maquis.jpg`;
@@ -46,6 +47,9 @@ export function UtilisateursScreen(): React.JSX.Element {
   const logoActuel = useEtablissementStore((s) => s.logoUri);
   const setEtablissement = useEtablissementStore((s) => s.set);
   const [users, setUsers] = useState<User[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
+  const [nomFournisseur, setNomFournisseur] = useState('');
+  const [telephoneFournisseur, setTelephoneFournisseur] = useState('');
   const [nomMaquis, setNomMaquis] = useState(nomMaquisActuel);
   const [logoUri, setLogoUri] = useState<string | null>(logoActuel);
   const [enregistrementEtablissement, setEnregistrementEtablissement] = useState(false);
@@ -59,6 +63,7 @@ export function UtilisateursScreen(): React.JSX.Element {
 
   const reload = useCallback(() => {
     getAllUsers().then(setUsers);
+    getFournisseurs(false).then(setFournisseurs);
     getDerniereSynchro().then(setDerniereSynchro);
   }, []);
 
@@ -142,6 +147,23 @@ export function UtilisateursScreen(): React.JSX.Element {
     setEditingPinUserId(null);
     setPinModifie('');
     Alert.alert('Code PIN mis à jour');
+  };
+
+  const handleCreerFournisseur = async (): Promise<void> => {
+    if (!nomFournisseur.trim() || !telephoneFournisseur.trim()) {
+      Alert.alert('Erreur', 'Le nom et le numéro de téléphone sont requis.');
+      return;
+    }
+    if (!etablissementId) return;
+    await createFournisseur(etablissementId, nomFournisseur.trim(), telephoneFournisseur.trim());
+    setNomFournisseur('');
+    setTelephoneFournisseur('');
+    reload();
+  };
+
+  const handleToggleFournisseurActif = async (fournisseur: Fournisseur): Promise<void> => {
+    await setFournisseurActif(fournisseur.id, !fournisseur.actif);
+    reload();
   };
 
   const handleAppeler = (): void => {
@@ -260,6 +282,57 @@ export function UtilisateursScreen(): React.JSX.Element {
               <Text style={styles.createButtonText}>Créer l'utilisateur</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Nouveau fournisseur</Text>
+            <Text style={styles.formSubtitle}>
+              Ces contacts apparaissent dans l'alerte de stock bas pour appeler ou écrire
+              directement.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nom du fournisseur"
+              value={nomFournisseur}
+              onChangeText={setNomFournisseur}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Téléphone (ex: +225 07 00 00 00 00)"
+              value={telephoneFournisseur}
+              onChangeText={setTelephoneFournisseur}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity style={styles.createButton} onPress={handleCreerFournisseur}>
+              <Ionicons name="person-add-outline" size={18} color="#FFF" />
+              <Text style={styles.createButtonText}>Ajouter le fournisseur</Text>
+            </TouchableOpacity>
+          </View>
+
+          {fournisseurs.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Fournisseurs</Text>
+              {fournisseurs.map((f) => (
+                <View key={f.id} style={styles.userCard}>
+                  <View style={styles.userRow}>
+                    <View style={styles.userAvatar}>
+                      <Ionicons name="call-outline" size={20} color={colors.primary} />
+                    </View>
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userNom}>{f.nom}</Text>
+                      <Text style={styles.userRole}>
+                        {f.telephone} · {f.actif ? 'Actif' : 'Désactivé'}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleToggleFournisseurActif(f)}>
+                      <Text style={f.actif ? styles.desactiverText : styles.activerText}>
+                        {f.actif ? 'Désactiver' : 'Activer'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
 
           <Text style={styles.sectionTitle}>Comptes existants</Text>
           {users.map((user) => (
@@ -397,6 +470,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  formSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: -4,
     marginBottom: spacing.xs,
   },
   logoPicker: {

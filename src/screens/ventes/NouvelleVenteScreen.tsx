@@ -13,6 +13,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Produit } from '../../types';
+import { declencherAlerteStock } from '../../utils/alerteStock';
 
 type Nav = NativeStackNavigationProp<VentesStackParamList, 'NouvelleVente'>;
 
@@ -61,7 +62,7 @@ export function NouvelleVenteScreen(): React.JSX.Element {
     if (!currentUser || !etablissementId || lignesPanier.length === 0) return;
     setEnCours(true);
     try {
-      await creerVente(
+      const { produitsEnAlerte } = await creerVente(
         etablissementId,
         currentUser.id,
         lignesPanier
@@ -78,6 +79,9 @@ export function NouvelleVenteScreen(): React.JSX.Element {
       setModePaiement('especes');
       reload();
       Alert.alert('Vente enregistrée', `Total encaissé : ${total.toLocaleString('fr-FR')} F`);
+      if (produitsEnAlerte.length > 0) {
+        declencherAlerteStock(produitsEnAlerte[0]);
+      }
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d\'enregistrer la vente.');
     } finally {

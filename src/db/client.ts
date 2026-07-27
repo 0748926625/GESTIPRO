@@ -46,6 +46,17 @@ export async function migrate(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_clotures_periode_fin ON clotures(periode_fin);
   `);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS fournisseurs (
+      id TEXT PRIMARY KEY,
+      etablissement_id TEXT NOT NULL,
+      nom TEXT NOT NULL,
+      telephone TEXT NOT NULL DEFAULT '',
+      actif INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL
+    );
+  `);
 }
 
 export async function getMeta(cle: string): Promise<string | null> {

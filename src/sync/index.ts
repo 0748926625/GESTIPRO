@@ -18,6 +18,7 @@ const TABLES: TableSyncConfig[] = [
   { nom: 'vente_lignes' },
   { nom: 'operations_caisse' },
   { nom: 'clotures', champsJson: ['top_produits', 'repartition_paiement'] },
+  { nom: 'fournisseurs', champsBooleens: ['actif'] },
 ];
 
 async function pousserTable(config: TableSyncConfig): Promise<void> {

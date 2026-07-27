@@ -89,6 +89,21 @@ export interface RepartitionModePaiement {
   nombreVentes: number;
 }
 
+export interface Fournisseur {
+  id: string;
+  nom: string;
+  telephone: string;
+  actif: boolean;
+}
+
+export interface AlerteStock {
+  produitId: string;
+  nom: string;
+  quantiteStock: number;
+  seuilAlerte: number;
+  unite: string;
+}
+
 export interface Cloture {
   id: string;
   periodeDebut: string;
