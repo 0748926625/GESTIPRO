@@ -1,8 +1,10 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getSecteurConfig } from '../data/secteurs';
 import { StockListScreen } from '../screens/stock/StockListScreen';
 import { ProduitFormScreen } from '../screens/stock/ProduitFormScreen';
 import { MouvementStockScreen } from '../screens/stock/MouvementStockScreen';
+import { useEtablissementStore } from '../store/etablissementStore';
 import { colors } from '../theme';
 
 export type StockStackParamList = {
@@ -14,6 +16,12 @@ export type StockStackParamList = {
 const Stack = createNativeStackNavigator<StockStackParamList>();
 
 export function StockStack(): React.JSX.Element {
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
+  const titre = config.stockActif
+    ? 'Stock'
+    : config.libelleArticlePluriel.charAt(0).toUpperCase() + config.libelleArticlePluriel.slice(1);
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -21,7 +29,7 @@ export function StockStack(): React.JSX.Element {
         headerTintColor: colors.text,
       }}
     >
-      <Stack.Screen name="StockList" component={StockListScreen} options={{ title: 'Stock' }} />
+      <Stack.Screen name="StockList" component={StockListScreen} options={{ title: titre }} />
       <Stack.Screen name="ProduitForm" component={ProduitFormScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="MouvementStock"

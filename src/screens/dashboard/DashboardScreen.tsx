@@ -7,6 +7,7 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { StatCard } from '../../components/StatCard';
+import { getSecteurConfig } from '../../data/secteurs';
 import { getProduitsStockBas } from '../../db/produits';
 import { getChiffreAffaires, getNombreVentes } from '../../db/rapports';
 import { useAuthStore } from '../../store/authStore';
@@ -20,6 +21,8 @@ export function DashboardScreen(): React.JSX.Element {
   const logout = useAuthStore((s) => s.logout);
   const nomMaquis = useEtablissementStore((s) => s.nom);
   const logoUri = useEtablissementStore((s) => s.logoUri);
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
   const [chiffreAffaires, setChiffreAffaires] = useState(0);
   const [nombreVentes, setNombreVentes] = useState(0);
   const [produitsAlerte, setProduitsAlerte] = useState<Produit[]>([]);
@@ -29,8 +32,10 @@ export function DashboardScreen(): React.JSX.Element {
       const debutJour = startOfDay(new Date()).toISOString();
       getChiffreAffaires(debutJour).then(setChiffreAffaires);
       getNombreVentes(debutJour).then(setNombreVentes);
-      getProduitsStockBas().then(setProduitsAlerte);
-    }, [])
+      if (config.stockActif) {
+        getProduitsStockBas().then(setProduitsAlerte);
+      }
+    }, [config.stockActif])
   );
 
   return (
@@ -71,21 +76,25 @@ export function DashboardScreen(): React.JSX.Element {
           />
         </View>
 
-        <TouchableOpacity style={styles.sectionHeader} onPress={() => navigation.navigate('Stock')}>
-          <Ionicons name="warning-outline" size={16} color={colors.text} />
-          <Text style={styles.sectionTitle}>Alertes stock bas ({produitsAlerte.length})</Text>
-        </TouchableOpacity>
-        {produitsAlerte.length === 0 ? (
-          <EmptyState message="Aucune alerte, le stock est correct." />
-        ) : (
-          produitsAlerte.map((p) => (
-            <View key={p.id} style={styles.alerteCard}>
-              <Text style={styles.alerteNom}>{p.nom}</Text>
-              <Text style={styles.alerteQuantite}>
-                {p.quantiteStock} {p.unite} restant(s)
-              </Text>
-            </View>
-          ))
+        {config.stockActif && (
+          <>
+            <TouchableOpacity style={styles.sectionHeader} onPress={() => navigation.navigate('Stock')}>
+              <Ionicons name="warning-outline" size={16} color={colors.text} />
+              <Text style={styles.sectionTitle}>Alertes stock bas ({produitsAlerte.length})</Text>
+            </TouchableOpacity>
+            {produitsAlerte.length === 0 ? (
+              <EmptyState message="Aucune alerte, le stock est correct." />
+            ) : (
+              produitsAlerte.map((p) => (
+                <View key={p.id} style={styles.alerteCard}>
+                  <Text style={styles.alerteNom}>{p.nom}</Text>
+                  <Text style={styles.alerteQuantite}>
+                    {p.quantiteStock} {p.unite} restant(s)
+                  </Text>
+                </View>
+              ))
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
