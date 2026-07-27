@@ -80,20 +80,21 @@ async function tirerTable(config: TableSyncConfig, etablissementId: string): Pro
 async function synchroniserEtablissement(etablissementId: string): Promise<void> {
   const { data, error } = await supabase
     .from('etablissements')
-    .select('nom, updated_at')
+    .select('nom, secteur, updated_at')
     .eq('id', etablissementId)
     .maybeSingle();
   if (error || !data) return;
 
-  const local = await db.getFirstAsync<{ nom: string; updated_at: string }>(
-    'SELECT nom, updated_at FROM etablissement WHERE id = ?',
+  const local = await db.getFirstAsync<{ nom: string; secteur: string; updated_at: string }>(
+    'SELECT nom, secteur, updated_at FROM etablissement WHERE id = ?',
     [etablissementId]
   );
   if (!local) return;
 
   if (new Date(data.updated_at) > new Date(local.updated_at)) {
-    await db.runAsync('UPDATE etablissement SET nom = ?, updated_at = ? WHERE id = ?', [
+    await db.runAsync('UPDATE etablissement SET nom = ?, secteur = ?, updated_at = ? WHERE id = ?', [
       data.nom,
+      data.secteur ?? 'maquis',
       data.updated_at,
       etablissementId,
     ]);

@@ -47,6 +47,13 @@ export async function migrate(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_clotures_periode_fin ON clotures(periode_fin);
   `);
 
+  const colonnesEtablissement = await db.getAllAsync<{ name: string }>(
+    'PRAGMA table_info(etablissement)'
+  );
+  if (!colonnesEtablissement.some((c) => c.name === 'secteur')) {
+    await db.execAsync(`ALTER TABLE etablissement ADD COLUMN secteur TEXT NOT NULL DEFAULT 'maquis';`);
+  }
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS fournisseurs (
       id TEXT PRIMARY KEY,

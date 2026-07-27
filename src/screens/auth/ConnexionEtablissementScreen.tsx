@@ -13,8 +13,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SECTEURS } from '../../data/secteurs';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
+import type { Secteur } from '../../types';
 
 type Mode = 'connexion' | 'inscription';
 
@@ -29,6 +31,7 @@ export function ConnexionEtablissementScreen(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [nomMaquis, setNomMaquis] = useState('');
+  const [secteur, setSecteur] = useState<Secteur>('maquis');
   const [chargement, setChargement] = useState(false);
   const [confirmationRequise, setConfirmationRequise] = useState(false);
 
@@ -62,7 +65,7 @@ export function ConnexionEtablissementScreen(): React.JSX.Element {
     }
     setChargement(true);
     try {
-      await completerEtablissement(nomMaquis.trim());
+      await completerEtablissement(nomMaquis.trim(), secteur);
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Une erreur est survenue.');
     } finally {
@@ -87,7 +90,30 @@ export function ConnexionEtablissementScreen(): React.JSX.Element {
               votre compte.
             </Text>
 
-            <Text style={styles.label}>Nom du maquis</Text>
+            <Text style={styles.label}>Secteur d'activité</Text>
+            <View style={styles.secteurGrid}>
+              {SECTEURS.map((s) => {
+                const actif = secteur === s.value;
+                return (
+                  <TouchableOpacity
+                    key={s.value}
+                    style={[styles.secteurCard, actif && styles.secteurCardActive]}
+                    onPress={() => setSecteur(s.value)}
+                  >
+                    <Ionicons
+                      name={s.icone}
+                      size={22}
+                      color={actif ? '#FFF' : colors.primary}
+                    />
+                    <Text style={[styles.secteurLabel, actif && styles.secteurLabelActive]}>
+                      {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={styles.label}>Nom de l'établissement</Text>
             <TextInput
               style={styles.input}
               value={nomMaquis}
@@ -239,6 +265,34 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginBottom: spacing.xs,
     marginTop: spacing.md,
+  },
+  secteurGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  secteurCard: {
+    width: '47%',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+  },
+  secteurCardActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  secteurLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  secteurLabelActive: {
+    color: '#FFF',
   },
   input: {
     backgroundColor: colors.surface,

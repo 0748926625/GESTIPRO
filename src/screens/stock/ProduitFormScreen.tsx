@@ -16,9 +16,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHeader } from '../../components/BackHeader';
 import { SelectField } from '../../components/SelectField';
-import { CATEGORIES_BOISSONS, PRODUITS_SUGGERES, type ProduitSuggere } from '../../data/catalogueBoissons';
+import type { ProduitSuggere } from '../../data/catalogueBoissons';
+import { getSecteurConfig } from '../../data/secteurs';
 import { createProduit, getProduit, setProduitActif, updateProduit } from '../../db/produits';
 import type { StockStackParamList } from '../../navigation/StockStack';
+import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
 
@@ -26,12 +28,15 @@ type Route = RouteProp<StockStackParamList, 'ProduitForm'>;
 type Nav = NativeStackNavigationProp<StockStackParamList, 'ProduitForm'>;
 
 const CATEGORIE_AUTRE = 'Autre';
+const QUANTITE_ILLIMITEE = 999999;
 
 export function ProduitFormScreen(): React.JSX.Element {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const produitId = route.params?.produitId;
   const etablissementId = useSessionStore((s) => s.etablissementId);
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
 
   const [nom, setNom] = useState('');
   const [categorie, setCategorie] = useState('');
@@ -48,7 +53,7 @@ export function ProduitFormScreen(): React.JSX.Element {
       if (p) {
         setNom(p.nom);
         setCategorie(p.categorie);
-        setCategoriePersonnalisee(!CATEGORIES_BOISSONS.includes(p.categorie));
+        setCategoriePersonnalisee(!config.categories.includes(p.categorie));
         setUnite(p.unite);
         setSeuilAlerte(String(p.seuilAlerte));
         setPrixAchat(String(p.prixAchat));
@@ -84,7 +89,7 @@ export function ProduitFormScreen(): React.JSX.Element {
       nom: nom.trim(),
       categorie: categorie.trim(),
       unite: unite.trim(),
-      seuilAlerte: Number(seuilAlerte) || 0,
+      seuilAlerte: config.stockActif ? Number(seuilAlerte) || 0 : 0,
       prixAchat: Number(prixAchat) || 0,
       prixVente: Number(prixVente) || 0,
     };
@@ -92,7 +97,10 @@ export function ProduitFormScreen(): React.JSX.Element {
       await updateProduit(produitId, input);
     } else {
       if (!etablissementId) return;
-      await createProduit(etablissementId, input);
+      await createProduit(etablissementId, {
+        ...input,
+        quantiteStockInitiale: config.stockActif ? undefined : QUANTITE_ILLIMITEE,
+      });
     }
     navigation.goBack();
   };
@@ -119,7 +127,11 @@ export function ProduitFormScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <BackHeader
-        title={produitId !== undefined ? 'Modifier le produit' : 'Nouveau produit'}
+        title={
+          produitId !== undefined
+            ? `Modifier le ${config.libelleArticle}`
+            : `Nouveau ${config.libelleArticle}`
+        }
         onBack={() => navigation.goBack()}
       />
       <KeyboardAvoidingView
@@ -130,14 +142,14 @@ export function ProduitFormScreen(): React.JSX.Element {
         {produitId === undefined && (
           <View style={styles.suggestionBox}>
             <View style={styles.suggestionHeader}>
-              <Ionicons name="beer-outline" size={18} color={colors.primary} />
-              <Text style={styles.suggestionTitle}>Boissons courantes en Côte d'Ivoire</Text>
+              <Ionicons name={config.icone} size={18} color={colors.primary} />
+              <Text style={styles.suggestionTitle}>{config.label} : suggestions courantes</Text>
             </View>
             <SelectField
-              label="Choisir un produit suggéré"
+              label={`Choisir un ${config.libelleArticle} suggéré`}
               displayValue=""
-              placeholder="Rechercher une boisson (Flag, Coca-Cola, Bissap...)"
-              options={PRODUITS_SUGGERES}
+              placeholder={`Rechercher un ${config.libelleArticle}...`}
+              options={config.suggestions}
               keyExtractor={(item) => item.nom}
               renderLabel={(item) => item.nom}
               renderSubtitle={(item) => item.categorie}
@@ -148,14 +160,14 @@ export function ProduitFormScreen(): React.JSX.Element {
           </View>
         )}
 
-        <Text style={styles.label}>Nom du produit</Text>
-        <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Ex: Bière 33cl" />
+        <Text style={styles.label}>Nom du {config.libelleArticle}</Text>
+        <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder={`Ex: ${config.suggestions[0]?.nom ?? ''}`} />
 
         <SelectField
           label="Catégorie"
           displayValue={categoriePersonnalisee ? CATEGORIE_AUTRE : categorie}
           placeholder="Choisir une catégorie"
-          options={CATEGORIES_BOISSONS}
+          options={config.categories}
           keyExtractor={(item) => item}
           renderLabel={(item) => item}
           onSelect={handleChoisirCategorie}
@@ -175,16 +187,20 @@ export function ProduitFormScreen(): React.JSX.Element {
           style={styles.input}
           value={unite}
           onChangeText={setUnite}
-          placeholder="Ex: bouteille, sachet"
+          placeholder="Ex: bouteille, sachet, service"
         />
 
-        <Text style={styles.label}>Seuil d'alerte (stock bas)</Text>
-        <TextInput
-          style={styles.input}
-          value={seuilAlerte}
-          onChangeText={setSeuilAlerte}
-          keyboardType="numeric"
-        />
+        {config.stockActif && (
+          <>
+            <Text style={styles.label}>Seuil d'alerte (stock bas)</Text>
+            <TextInput
+              style={styles.input}
+              value={seuilAlerte}
+              onChangeText={setSeuilAlerte}
+              keyboardType="numeric"
+            />
+          </>
+        )}
 
         <Text style={styles.label}>Prix d'achat (F CFA)</Text>
         <TextInput

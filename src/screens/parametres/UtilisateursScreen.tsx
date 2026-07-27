@@ -20,6 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getSecteurConfig } from '../../data/secteurs';
 import { saveEtablissement } from '../../db/etablissement';
 import { createFournisseur, getFournisseurs, setFournisseurActif } from '../../db/fournisseurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
@@ -45,6 +46,8 @@ export function UtilisateursScreen(): React.JSX.Element {
   const etablissementId = useSessionStore((s) => s.etablissementId);
   const nomMaquisActuel = useEtablissementStore((s) => s.nom);
   const logoActuel = useEtablissementStore((s) => s.logoUri);
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const secteurConfig = getSecteurConfig(secteur);
   const setEtablissement = useEtablissementStore((s) => s.set);
   const [users, setUsers] = useState<User[]>([]);
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
@@ -213,6 +216,10 @@ export function UtilisateursScreen(): React.JSX.Element {
 
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Établissement</Text>
+            <View style={styles.secteurBadge}>
+              <Ionicons name={secteurConfig.icone} size={14} color={colors.primary} />
+              <Text style={styles.secteurBadgeText}>{secteurConfig.label}</Text>
+            </View>
             <TouchableOpacity style={styles.logoPicker} onPress={handleChoisirLogo}>
               {logoUri ? (
                 <Image source={{ uri: logoUri }} style={styles.logoImage} />
@@ -231,7 +238,7 @@ export function UtilisateursScreen(): React.JSX.Element {
             </TouchableOpacity>
             <TextInput
               style={styles.input}
-              placeholder="Nom du maquis"
+              placeholder="Nom de l'établissement"
               value={nomMaquis}
               onChangeText={setNomMaquis}
             />
@@ -283,54 +290,58 @@ export function UtilisateursScreen(): React.JSX.Element {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Nouveau fournisseur</Text>
-            <Text style={styles.formSubtitle}>
-              Ces contacts apparaissent dans l'alerte de stock bas pour appeler ou écrire
-              directement.
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nom du fournisseur"
-              value={nomFournisseur}
-              onChangeText={setNomFournisseur}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Téléphone (ex: +225 07 00 00 00 00)"
-              value={telephoneFournisseur}
-              onChangeText={setTelephoneFournisseur}
-              keyboardType="phone-pad"
-            />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreerFournisseur}>
-              <Ionicons name="person-add-outline" size={18} color="#FFF" />
-              <Text style={styles.createButtonText}>Ajouter le fournisseur</Text>
-            </TouchableOpacity>
-          </View>
-
-          {fournisseurs.length > 0 && (
+          {secteurConfig.stockActif && (
             <>
-              <Text style={styles.sectionTitle}>Fournisseurs</Text>
-              {fournisseurs.map((f) => (
-                <View key={f.id} style={styles.userCard}>
-                  <View style={styles.userRow}>
-                    <View style={styles.userAvatar}>
-                      <Ionicons name="call-outline" size={20} color={colors.primary} />
+              <View style={styles.formCard}>
+                <Text style={styles.formTitle}>Nouveau fournisseur</Text>
+                <Text style={styles.formSubtitle}>
+                  Ces contacts apparaissent dans l'alerte de stock bas pour appeler ou écrire
+                  directement.
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nom du fournisseur"
+                  value={nomFournisseur}
+                  onChangeText={setNomFournisseur}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Téléphone (ex: +225 07 00 00 00 00)"
+                  value={telephoneFournisseur}
+                  onChangeText={setTelephoneFournisseur}
+                  keyboardType="phone-pad"
+                />
+                <TouchableOpacity style={styles.createButton} onPress={handleCreerFournisseur}>
+                  <Ionicons name="person-add-outline" size={18} color="#FFF" />
+                  <Text style={styles.createButtonText}>Ajouter le fournisseur</Text>
+                </TouchableOpacity>
+              </View>
+
+              {fournisseurs.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Fournisseurs</Text>
+                  {fournisseurs.map((f) => (
+                    <View key={f.id} style={styles.userCard}>
+                      <View style={styles.userRow}>
+                        <View style={styles.userAvatar}>
+                          <Ionicons name="call-outline" size={20} color={colors.primary} />
+                        </View>
+                        <View style={styles.userInfo}>
+                          <Text style={styles.userNom}>{f.nom}</Text>
+                          <Text style={styles.userRole}>
+                            {f.telephone} · {f.actif ? 'Actif' : 'Désactivé'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity onPress={() => handleToggleFournisseurActif(f)}>
+                          <Text style={f.actif ? styles.desactiverText : styles.activerText}>
+                            {f.actif ? 'Désactiver' : 'Activer'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                    <View style={styles.userInfo}>
-                      <Text style={styles.userNom}>{f.nom}</Text>
-                      <Text style={styles.userRole}>
-                        {f.telephone} · {f.actif ? 'Actif' : 'Désactivé'}
-                      </Text>
-                    </View>
-                    <TouchableOpacity onPress={() => handleToggleFournisseurActif(f)}>
-                      <Text style={f.actif ? styles.desactiverText : styles.activerText}>
-                        {f.actif ? 'Désactiver' : 'Activer'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
+                  ))}
+                </>
+              )}
             </>
           )}
 
@@ -471,6 +482,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.xs,
+  },
+  secteurBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    marginBottom: spacing.sm,
+  },
+  secteurBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
   formSubtitle: {
     fontSize: 12,

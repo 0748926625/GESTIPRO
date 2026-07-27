@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import type { Secteur } from '../types';
 
 interface SessionState {
   session: Session | null;
@@ -9,7 +10,7 @@ interface SessionState {
   initialiser: () => Promise<void>;
   inscrire: (email: string, motDePasse: string) => Promise<{ confirmationRequise: boolean }>;
   connecter: (email: string, motDePasse: string) => Promise<void>;
-  completerEtablissement: (nomMaquis: string) => Promise<void>;
+  completerEtablissement: (nomMaquis: string, secteur: Secteur) => Promise<void>;
   deconnecter: () => Promise<void>;
 }
 
@@ -59,13 +60,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ session: data.session, etablissementId });
   },
 
-  completerEtablissement: async (nomMaquis) => {
+  completerEtablissement: async (nomMaquis, secteur) => {
     const userId = get().session?.user.id;
     if (!userId) throw new Error('Aucune session active.');
 
     const { data: etablissement, error: errEtablissement } = await supabase
       .from('etablissements')
-      .insert({ nom: nomMaquis, owner_id: userId })
+      .insert({ nom: nomMaquis, owner_id: userId, secteur })
       .select()
       .single();
     if (errEtablissement) throw errEtablissement;

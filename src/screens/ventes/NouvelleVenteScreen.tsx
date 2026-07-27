@@ -6,10 +6,12 @@ import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { MODES_PAIEMENT, type ModePaiement } from '../../data/modesPaiement';
+import { getSecteurConfig } from '../../data/secteurs';
 import { getProduits } from '../../db/produits';
 import { creerVente } from '../../db/ventes';
 import type { VentesStackParamList } from '../../navigation/VentesStack';
 import { useAuthStore } from '../../store/authStore';
+import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Produit } from '../../types';
@@ -22,6 +24,8 @@ export function NouvelleVenteScreen(): React.JSX.Element {
   const currentUser = useAuthStore((s) => s.currentUser);
   const logout = useAuthStore((s) => s.logout);
   const etablissementId = useSessionStore((s) => s.etablissementId);
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [panier, setPanier] = useState<Record<string, number>>({});
   const [modePaiement, setModePaiement] = useState<ModePaiement>('especes');
@@ -120,16 +124,21 @@ export function NouvelleVenteScreen(): React.JSX.Element {
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         }
-        ListEmptyComponent={<EmptyState message="Aucun produit en stock. Demandez au gérant d'en ajouter." />}
+        ListEmptyComponent={
+          <EmptyState
+            message={`Aucun ${config.libelleArticle}. Demandez au gérant d'en ajouter.`}
+          />
+        }
         renderItem={({ item }) => {
           const quantiteAuPanier = panier[item.id] ?? 0;
-          const epuise = item.quantiteStock <= 0;
+          const epuise = config.stockActif && item.quantiteStock <= 0;
           return (
             <View style={[styles.row, epuise && styles.rowEpuise]}>
               <View style={styles.info}>
                 <Text style={styles.nom}>{item.nom}</Text>
                 <Text style={styles.details}>
-                  {item.prixVente.toLocaleString('fr-FR')} F · Stock: {item.quantiteStock} {item.unite}
+                  {item.prixVente.toLocaleString('fr-FR')} F
+                  {config.stockActif ? ` · Stock: ${item.quantiteStock} ${item.unite}` : ` · ${item.unite}`}
                 </Text>
               </View>
               <View style={styles.stepper}>

@@ -2,6 +2,8 @@ import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCategorieColor } from '../data/catalogueBoissons';
+import { getSecteurConfig } from '../data/secteurs';
+import { useEtablissementStore } from '../store/etablissementStore';
 import { cardShadow, colors, spacing, withOpacity } from '../theme';
 import type { Produit } from '../types';
 
@@ -11,12 +13,14 @@ interface ProduitCardProps {
 }
 
 export function ProduitCard({ produit, onPress }: ProduitCardProps): React.JSX.Element {
-  const stockBas = produit.quantiteStock <= produit.seuilAlerte;
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
+  const stockBas = config.stockActif && produit.quantiteStock <= produit.seuilAlerte;
   const couleurCategorie = getCategorieColor(produit.categorie);
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} disabled={!onPress} activeOpacity={0.7}>
       <View style={[styles.avatar, { backgroundColor: withOpacity(couleurCategorie, 0.15) }]}>
-        <Ionicons name="beer-outline" size={20} color={couleurCategorie} />
+        <Ionicons name={config.icone} size={20} color={couleurCategorie} />
       </View>
       <View style={styles.info}>
         <Text style={styles.nom}>{produit.nom}</Text>
@@ -29,12 +33,14 @@ export function ProduitCard({ produit, onPress }: ProduitCardProps): React.JSX.E
         )}
       </View>
       <View style={styles.stockInfo}>
-        <View style={styles.quantiteRow}>
-          {stockBas && <Ionicons name="alert-circle" size={14} color={colors.danger} />}
-          <Text style={[styles.quantite, stockBas && styles.quantiteBasse]}>
-            {produit.quantiteStock} {produit.unite}
-          </Text>
-        </View>
+        {config.stockActif && (
+          <View style={styles.quantiteRow}>
+            {stockBas && <Ionicons name="alert-circle" size={14} color={colors.danger} />}
+            <Text style={[styles.quantite, stockBas && styles.quantiteBasse]}>
+              {produit.quantiteStock} {produit.unite}
+            </Text>
+          </View>
+        )}
         <Text style={styles.prix}>{produit.prixVente.toLocaleString('fr-FR')} F</Text>
       </View>
     </TouchableOpacity>

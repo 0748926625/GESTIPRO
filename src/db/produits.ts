@@ -54,19 +54,21 @@ export interface ProduitInput {
   seuilAlerte: number;
   prixAchat: number;
   prixVente: number;
+  quantiteStockInitiale?: number;
 }
 
 export async function createProduit(etablissementId: string, input: ProduitInput): Promise<string> {
   const id = Crypto.randomUUID();
   await db.runAsync(
     `INSERT INTO produits (id, etablissement_id, nom, categorie, unite, quantite_stock, seuil_alerte, prix_achat, prix_vente, actif, updated_at)
-     VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, 1, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
     [
       id,
       etablissementId,
       input.nom,
       input.categorie,
       input.unite,
+      input.quantiteStockInitiale ?? 0,
       input.seuilAlerte,
       input.prixAchat,
       input.prixVente,

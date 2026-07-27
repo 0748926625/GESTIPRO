@@ -6,9 +6,11 @@ import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { ProduitCard } from '../../components/ProduitCard';
+import { getSecteurConfig } from '../../data/secteurs';
 import { getProduits } from '../../db/produits';
 import type { StockStackParamList } from '../../navigation/StockStack';
 import { useAuthStore } from '../../store/authStore';
+import { useEtablissementStore } from '../../store/etablissementStore';
 import { colors, spacing } from '../../theme';
 import type { Produit } from '../../types';
 
@@ -17,6 +19,8 @@ type Nav = NativeStackNavigationProp<StockStackParamList, 'StockList'>;
 export function StockListScreen(): React.JSX.Element {
   const navigation = useNavigation<Nav>();
   const isGerant = useAuthStore((s) => s.currentUser?.role === 'gerant');
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [recherche, setRecherche] = useState('');
 
@@ -37,7 +41,7 @@ export function StockListScreen(): React.JSX.Element {
           <Ionicons name="search" size={16} color={colors.textMuted} />
           <TextInput
             style={styles.recherche}
-            placeholder="Rechercher un produit..."
+            placeholder={`Rechercher un ${config.libelleArticle}...`}
             placeholderTextColor={colors.textMuted}
             value={recherche}
             onChangeText={setRecherche}
@@ -49,7 +53,9 @@ export function StockListScreen(): React.JSX.Element {
             onPress={() => navigation.navigate('ProduitForm', {})}
           >
             <Ionicons name="add" size={18} color="#FFF" />
-            <Text style={styles.addButtonText}>Produit</Text>
+            <Text style={styles.addButtonText}>
+              {config.libelleArticle.charAt(0).toUpperCase() + config.libelleArticle.slice(1)}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -57,7 +63,11 @@ export function StockListScreen(): React.JSX.Element {
         data={produitsFiltres}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<EmptyState message="Aucun produit. Ajoutez votre premier produit en stock." />}
+        ListEmptyComponent={
+          <EmptyState
+            message={`Aucun ${config.libelleArticle}. Ajoutez votre premier ${config.libelleArticle}.`}
+          />
+        }
         renderItem={({ item }) => (
           <View style={styles.row}>
             <View style={styles.cardWrapper}>
@@ -66,7 +76,7 @@ export function StockListScreen(): React.JSX.Element {
                 onPress={isGerant ? () => navigation.navigate('ProduitForm', { produitId: item.id }) : undefined}
               />
             </View>
-            {isGerant && (
+            {isGerant && config.stockActif && (
               <TouchableOpacity
                 style={styles.stockButton}
                 onPress={() =>

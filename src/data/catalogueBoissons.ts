@@ -25,8 +25,23 @@ const COULEURS_CATEGORIES: Record<string, string> = {
   'Vins & spiritueux': colors.accentBordeaux,
 };
 
+const PALETTE_FALLBACK: string[] = [
+  colors.accentRouge,
+  colors.accentBleu,
+  colors.accentVert,
+  colors.accentViolet,
+  colors.accentBordeaux,
+  colors.accentJaune,
+];
+
 export function getCategorieColor(categorie: string): string {
-  return COULEURS_CATEGORIES[categorie] ?? colors.textMuted;
+  if (COULEURS_CATEGORIES[categorie]) return COULEURS_CATEGORIES[categorie];
+  if (!categorie) return colors.textMuted;
+  let hash = 0;
+  for (let i = 0; i < categorie.length; i += 1) {
+    hash = (hash * 31 + categorie.charCodeAt(i)) >>> 0;
+  }
+  return PALETTE_FALLBACK[hash % PALETTE_FALLBACK.length];
 }
 
 export const PRODUITS_SUGGERES: ProduitSuggere[] = [
