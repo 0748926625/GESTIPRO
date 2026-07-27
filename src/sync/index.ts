@@ -80,7 +80,7 @@ async function tirerTable(config: TableSyncConfig, etablissementId: string): Pro
 async function synchroniserEtablissement(etablissementId: string): Promise<void> {
   const { data, error } = await supabase
     .from('etablissements')
-    .select('nom, secteur, updated_at')
+    .select('nom, secteur, essai_fin, abonnement_actif, updated_at')
     .eq('id', etablissementId)
     .maybeSingle();
   if (error || !data) return;
@@ -90,6 +90,13 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
     [etablissementId]
   );
   if (!local) return;
+
+  // essai_fin / abonnement_actif sont gérés uniquement côté serveur (à la main dans Supabase) :
+  // on les récupère toujours, sans jamais les renvoyer.
+  await db.runAsync(
+    'UPDATE etablissement SET essai_fin = ?, abonnement_actif = ? WHERE id = ?',
+    [data.essai_fin ?? null, data.abonnement_actif ? 1 : 0, etablissementId]
+  );
 
   if (new Date(data.updated_at) > new Date(local.updated_at)) {
     await db.runAsync('UPDATE etablissement SET nom = ?, secteur = ?, updated_at = ? WHERE id = ?', [

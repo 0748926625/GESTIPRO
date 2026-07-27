@@ -5,6 +5,8 @@ export interface Etablissement {
   nom: string;
   logoUri: string | null;
   secteur: Secteur;
+  essaiFin: string | null;
+  abonnementActif: boolean;
 }
 
 export async function ensureEtablissementLocal(
@@ -24,14 +26,21 @@ export async function ensureEtablissementLocal(
 }
 
 export async function getEtablissement(etablissementId: string): Promise<Etablissement> {
-  const row = await db.getFirstAsync<{ nom: string; logo_uri: string | null; secteur: string }>(
-    'SELECT nom, logo_uri, secteur FROM etablissement WHERE id = ?',
-    [etablissementId]
-  );
+  const row = await db.getFirstAsync<{
+    nom: string;
+    logo_uri: string | null;
+    secteur: string;
+    essai_fin: string | null;
+    abonnement_actif: number;
+  }>('SELECT nom, logo_uri, secteur, essai_fin, abonnement_actif FROM etablissement WHERE id = ?', [
+    etablissementId,
+  ]);
   return {
     nom: row?.nom ?? 'GestiPro',
     logoUri: row?.logo_uri ?? null,
     secteur: (row?.secteur as Secteur) ?? 'maquis',
+    essaiFin: row?.essai_fin ?? null,
+    abonnementActif: row?.abonnement_actif === 1,
   };
 }
 

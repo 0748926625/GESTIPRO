@@ -9,8 +9,9 @@ import { ensureDefaultGerant } from '../db/users';
 import { synchroniser } from '../sync';
 import { supabaseConfigOk } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
-import { useEtablissementStore } from '../store/etablissementStore';
+import { estAbonnementValide, useEtablissementStore } from '../store/etablissementStore';
 import { useSessionStore } from '../store/sessionStore';
+import { AbonnementExpireScreen } from '../screens/auth/AbonnementExpireScreen';
 import { ConnexionEtablissementScreen } from '../screens/auth/ConnexionEtablissementScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { GerantTabs } from './GerantTabs';
@@ -22,6 +23,8 @@ const Stack = createNativeStackNavigator();
 export function RootNavigator(): React.JSX.Element {
   const currentUser = useAuthStore((s) => s.currentUser);
   const chargerEtablissement = useEtablissementStore((s) => s.charger);
+  const essaiFin = useEtablissementStore((s) => s.essaiFin);
+  const abonnementActif = useEtablissementStore((s) => s.abonnementActif);
   const session = useSessionStore((s) => s.session);
   const etablissementId = useSessionStore((s) => s.etablissementId);
   const sessionPrete = useSessionStore((s) => s.pret);
@@ -128,6 +131,8 @@ export function RootNavigator(): React.JSX.Element {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!session || !etablissementId ? (
           <Stack.Screen name="ConnexionEtablissement" component={ConnexionEtablissementScreen} />
+        ) : !estAbonnementValide(essaiFin, abonnementActif) ? (
+          <Stack.Screen name="AbonnementExpire" component={AbonnementExpireScreen} />
         ) : !currentUser ? (
           <Stack.Screen name="Login" component={LoginScreen} />
         ) : currentUser.role === 'gerant' ? (

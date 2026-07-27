@@ -64,9 +64,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const userId = get().session?.user.id;
     if (!userId) throw new Error('Aucune session active.');
 
+    const essaiFin = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: etablissement, error: errEtablissement } = await supabase
       .from('etablissements')
-      .insert({ nom: nomMaquis, owner_id: userId, secteur })
+      .insert({ nom: nomMaquis, owner_id: userId, secteur, essai_fin: essaiFin })
       .select()
       .single();
     if (errEtablissement) throw errEtablissement;

@@ -53,6 +53,12 @@ export async function migrate(): Promise<void> {
   if (!colonnesEtablissement.some((c) => c.name === 'secteur')) {
     await db.execAsync(`ALTER TABLE etablissement ADD COLUMN secteur TEXT NOT NULL DEFAULT 'maquis';`);
   }
+  if (!colonnesEtablissement.some((c) => c.name === 'essai_fin')) {
+    await db.execAsync(`ALTER TABLE etablissement ADD COLUMN essai_fin TEXT;`);
+  }
+  if (!colonnesEtablissement.some((c) => c.name === 'abonnement_actif')) {
+    await db.execAsync(`ALTER TABLE etablissement ADD COLUMN abonnement_actif INTEGER NOT NULL DEFAULT 0;`);
+  }
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS fournisseurs (
