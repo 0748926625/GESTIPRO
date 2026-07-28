@@ -19,9 +19,12 @@ export async function ensureEtablissementLocal(
     [etablissementId]
   );
   if (row && row.count > 0) return;
+  // updated_at volontairement très ancien : cette ligne est un simple placeholder en attendant
+  // le premier sync, qui doit toujours ramener le vrai nom/secteur distants sans être bloqué
+  // par la comparaison "le plus récent gagne".
   await db.runAsync(
     'INSERT INTO etablissement (id, nom, logo_uri, secteur, updated_at) VALUES (?, ?, NULL, ?, ?)',
-    [etablissementId, nomParDefaut, secteur, new Date().toISOString()]
+    [etablissementId, nomParDefaut, secteur, new Date(0).toISOString()]
   );
 }
 

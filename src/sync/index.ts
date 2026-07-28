@@ -91,17 +91,16 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
   );
   if (!local) return;
 
-  // essai_fin / abonnement_actif sont gérés uniquement côté serveur (à la main dans Supabase) :
-  // on les récupère toujours, sans jamais les renvoyer.
+  // secteur / essai_fin / abonnement_actif sont fixés à la création ou gérés à la main côté
+  // serveur (Supabase) : on les récupère toujours, sans jamais les renvoyer depuis l'appareil.
   await db.runAsync(
-    'UPDATE etablissement SET essai_fin = ?, abonnement_actif = ? WHERE id = ?',
-    [data.essai_fin ?? null, data.abonnement_actif ? 1 : 0, etablissementId]
+    'UPDATE etablissement SET secteur = ?, essai_fin = ?, abonnement_actif = ? WHERE id = ?',
+    [data.secteur ?? 'maquis', data.essai_fin ?? null, data.abonnement_actif ? 1 : 0, etablissementId]
   );
 
   if (new Date(data.updated_at) > new Date(local.updated_at)) {
-    await db.runAsync('UPDATE etablissement SET nom = ?, secteur = ?, updated_at = ? WHERE id = ?', [
+    await db.runAsync('UPDATE etablissement SET nom = ?, updated_at = ? WHERE id = ?', [
       data.nom,
-      data.secteur ?? 'maquis',
       data.updated_at,
       etablissementId,
     ]);
