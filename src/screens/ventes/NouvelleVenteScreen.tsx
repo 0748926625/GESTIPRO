@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { MODES_PAIEMENT, type ModePaiement } from '../../data/modesPaiement';
 import { getSecteurConfig } from '../../data/secteurs';
+import { getLaveurs } from '../../db/laveurs';
 import { getProduits } from '../../db/produits';
 import { creerVente } from '../../db/ventes';
 import type { VentesStackParamList } from '../../navigation/VentesStack';
@@ -14,7 +15,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
-import type { Produit } from '../../types';
+import type { Laveur, Produit } from '../../types';
 import { declencherAlerteStock } from '../../utils/alerteStock';
 
 type Nav = NativeStackNavigationProp<VentesStackParamList, 'NouvelleVente'>;
@@ -29,11 +30,16 @@ export function NouvelleVenteScreen(): React.JSX.Element {
   const [produits, setProduits] = useState<Produit[]>([]);
   const [panier, setPanier] = useState<Record<string, number>>({});
   const [modePaiement, setModePaiement] = useState<ModePaiement>('especes');
+  const [laveurs, setLaveurs] = useState<Laveur[]>([]);
+  const [laveurId, setLaveurId] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
 
   const reload = useCallback(() => {
     getProduits().then(setProduits);
-  }, []);
+    if (config.gestionLaveurs) {
+      getLaveurs().then(setLaveurs);
+    }
+  }, [config.gestionLaveurs]);
 
   useFocusEffect(reload);
 
@@ -77,10 +83,12 @@ export function NouvelleVenteScreen(): React.JSX.Element {
             quantite: l.quantite,
             prixUnitaireVente: l.produit.prixVente,
           })),
-        modePaiement
+        modePaiement,
+        laveurId
       );
       setPanier({});
       setModePaiement('especes');
+      setLaveurId(null);
       reload();
       Alert.alert('Vente enregistrée', `Total encaissé : ${total.toLocaleString('fr-FR')} F`);
       if (produitsEnAlerte.length > 0) {
@@ -164,6 +172,28 @@ export function NouvelleVenteScreen(): React.JSX.Element {
       />
       {lignesPanier.length > 0 && (
         <View style={styles.footer}>
+          {config.gestionLaveurs && laveurs.length > 0 && (
+            <>
+              <Text style={styles.modePaiementLabel}>Laveur (commission)</Text>
+              <View style={styles.modePaiementRow}>
+                {laveurs.map((l) => {
+                  const actif = laveurId === l.id;
+                  return (
+                    <TouchableOpacity
+                      key={l.id}
+                      style={[styles.modeChip, { borderColor: colors.primary }, actif && { backgroundColor: colors.primary }]}
+                      onPress={() => setLaveurId(actif ? null : l.id)}
+                    >
+                      <Text style={[styles.modeChipText, { color: actif ? '#FFF' : colors.primary }]}>
+                        {l.nom}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          )}
+
           <Text style={styles.modePaiementLabel}>Mode de paiement</Text>
           <View style={styles.modePaiementRow}>
             {MODES_PAIEMENT.map((mode) => {

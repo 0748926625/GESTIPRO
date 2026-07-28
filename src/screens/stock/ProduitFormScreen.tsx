@@ -136,7 +136,7 @@ export function ProduitFormScreen(): React.JSX.Element {
       />
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       <ScrollView contentContainerStyle={styles.content}>
         {produitId === undefined && (

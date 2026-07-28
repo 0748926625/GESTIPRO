@@ -42,6 +42,8 @@ export interface Vente {
   date: string;
   total: number;
   modePaiement: ModePaiement;
+  laveurId: string | null;
+  commissionMontant: number | null;
 }
 
 export interface VenteLigne {
@@ -62,6 +64,7 @@ export interface VenteLigneInput {
 export interface VenteAvecLignes extends Vente {
   lignes: (VenteLigne & { nomProduit: string })[];
   nomUser: string;
+  nomLaveur: string | null;
 }
 
 export interface ProduitVendu {
@@ -96,6 +99,21 @@ export interface Fournisseur {
   nom: string;
   telephone: string;
   actif: boolean;
+}
+
+export interface Laveur {
+  id: string;
+  nom: string;
+  tauxCommission: number;
+  actif: boolean;
+}
+
+export interface CommissionLaveur {
+  laveurId: string;
+  nom: string;
+  nombreVentes: number;
+  chiffreAffaires: number;
+  commission: number;
 }
 
 export interface AlerteStock {

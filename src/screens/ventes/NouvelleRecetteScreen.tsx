@@ -62,7 +62,7 @@ export function NouvelleRecetteScreen(): React.JSX.Element {
       <BackHeader title="Autre recette" onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.subtitle}>

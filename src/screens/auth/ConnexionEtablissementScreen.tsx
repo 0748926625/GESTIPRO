@@ -78,7 +78,7 @@ export function ConnexionEtablissementScreen(): React.JSX.Element {
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.logo}>
@@ -138,7 +138,7 @@ export function ConnexionEtablissementScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.content}>
           <LinearGradient
             colors={[colors.primary, colors.accentRouge]}

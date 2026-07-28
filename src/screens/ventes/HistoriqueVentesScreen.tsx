@@ -87,7 +87,10 @@ export function HistoriqueVentesScreen(): React.JSX.Element {
             </View>
             <View style={styles.vendeurRow}>
               <Ionicons name="person-outline" size={13} color={colors.textMuted} />
-              <Text style={styles.vendeur}>{item.nomUser}</Text>
+              <Text style={styles.vendeur}>
+                {item.nomUser}
+                {item.nomLaveur ? ` · ${item.nomLaveur}` : ''}
+              </Text>
               <View
                 style={[
                   styles.modeBadge,

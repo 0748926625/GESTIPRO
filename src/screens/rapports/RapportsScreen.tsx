@@ -9,9 +9,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { StatCard } from '../../components/StatCard';
 import { getModePaiementInfo } from '../../data/modesPaiement';
+import { getSecteurConfig } from '../../data/secteurs';
 import { creerCloture, getDerniereClotureFin } from '../../db/clotures';
 import {
   getChiffreAffaires,
+  getCommissionsParLaveur,
   getMargeTotale,
   getNombreVentes,
   getProduitsTopVentes,
@@ -23,7 +25,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
-import type { ProduitVendu, RepartitionModePaiement } from '../../types';
+import type { CommissionLaveur, ProduitVendu, RepartitionModePaiement } from '../../types';
 import { genererRapportPdf, partagerPdf, telechargerPdf } from '../../utils/pdf';
 
 type Nav = NativeStackNavigationProp<RapportsStackParamList, 'Rapports'>;
@@ -53,10 +55,13 @@ export function RapportsScreen(): React.JSX.Element {
   const [depenses, setDepenses] = useState(0);
   const [topProduits, setTopProduits] = useState<ProduitVendu[]>([]);
   const [repartitionPaiement, setRepartitionPaiement] = useState<RepartitionModePaiement[]>([]);
+  const [commissionsLaveurs, setCommissionsLaveurs] = useState<CommissionLaveur[]>([]);
   const [exportEnCours, setExportEnCours] = useState(false);
   const [clotureEnCours, setClotureEnCours] = useState(false);
   const nomMaquis = useEtablissementStore((s) => s.nom);
   const logoUri = useEtablissementStore((s) => s.logoUri);
+  const secteur = useEtablissementStore((s) => s.secteur);
+  const config = getSecteurConfig(secteur);
   const etablissementId = useSessionStore((s) => s.etablissementId);
   const currentUser = useAuthStore((s) => s.currentUser);
 
@@ -71,7 +76,10 @@ export function RapportsScreen(): React.JSX.Element {
     getTotalParType(depuisISO, 'depense').then(setDepenses);
     getProduitsTopVentes(depuisISO).then(setTopProduits);
     getRepartitionParModePaiement(depuisISO).then(setRepartitionPaiement);
-  }, [depuisISO]);
+    if (config.gestionLaveurs) {
+      getCommissionsParLaveur(depuisISO).then(setCommissionsLaveurs);
+    }
+  }, [depuisISO, config.gestionLaveurs]);
 
   useFocusEffect(reload);
 
@@ -267,6 +275,30 @@ export function RapportsScreen(): React.JSX.Element {
                 </View>
               );
             })}
+          </>
+        )}
+
+        {config.gestionLaveurs && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="water-outline" size={16} color={colors.text} />
+              <Text style={styles.sectionTitle}>Commissions par laveur</Text>
+            </View>
+            {commissionsLaveurs.length === 0 ? (
+              <EmptyState message="Aucune vente attribuée à un laveur sur cette période." />
+            ) : (
+              commissionsLaveurs.map((c) => (
+                <View key={c.laveurId} style={styles.modeRow}>
+                  <View style={styles.modeInfo}>
+                    <Text style={styles.modeNom}>{c.nom}</Text>
+                    <Text style={styles.modeDetails}>
+                      {c.nombreVentes} vente(s) · {c.chiffreAffaires.toLocaleString('fr-FR')} F encaissé
+                    </Text>
+                  </View>
+                  <Text style={styles.modeMontant}>{c.commission.toLocaleString('fr-FR')} F</Text>
+                </View>
+              ))
+            )}
           </>
         )}
 

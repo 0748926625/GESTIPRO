@@ -8,6 +8,7 @@ export interface SecteurConfig {
   description: string;
   icone: keyof typeof Ionicons.glyphMap;
   stockActif: boolean;
+  gestionLaveurs: boolean;
   libelleArticle: string;
   libelleArticlePluriel: string;
   categories: string[];
@@ -21,6 +22,7 @@ export const SECTEURS: SecteurConfig[] = [
     description: 'Boissons et snacks au verre ou à la bouteille',
     icone: 'beer-outline',
     stockActif: true,
+    gestionLaveurs: false,
     libelleArticle: 'produit',
     libelleArticlePluriel: 'produits',
     categories: CATEGORIES_BOISSONS,
@@ -32,6 +34,7 @@ export const SECTEURS: SecteurConfig[] = [
     description: 'Plats, boissons et menu du jour',
     icone: 'restaurant-outline',
     stockActif: true,
+    gestionLaveurs: false,
     libelleArticle: 'plat',
     libelleArticlePluriel: 'plats',
     categories: ['Entrées', 'Plats', 'Accompagnements', 'Desserts', 'Boissons', 'Autre'],
@@ -57,6 +60,7 @@ export const SECTEURS: SecteurConfig[] = [
     description: 'Services de lavage véhicules et motos (sans gestion de stock)',
     icone: 'car-outline',
     stockActif: false,
+    gestionLaveurs: true,
     libelleArticle: 'service',
     libelleArticlePluriel: 'services',
     categories: [
@@ -82,6 +86,7 @@ export const SECTEURS: SecteurConfig[] = [
     description: 'Boutique, épicerie, quincaillerie...',
     icone: 'storefront-outline',
     stockActif: true,
+    gestionLaveurs: false,
     libelleArticle: 'article',
     libelleArticlePluriel: 'articles',
     categories: [

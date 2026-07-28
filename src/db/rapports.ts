@@ -1,6 +1,6 @@
 import { db } from './client';
 import type { ModePaiement } from '../data/modesPaiement';
-import type { ProduitVendu, RepartitionModePaiement } from '../types';
+import type { CommissionLaveur, ProduitVendu, RepartitionModePaiement } from '../types';
 
 export async function getChiffreAffaires(depuisISO: string, jusquISO?: string): Promise<number> {
   const row = await db.getFirstAsync<{ total: number | null }>(
@@ -46,6 +46,39 @@ export async function getRepartitionParModePaiement(
     modePaiement: r.mode_paiement as ModePaiement,
     total: r.total,
     nombreVentes: r.nombre_ventes,
+  }));
+}
+
+export async function getCommissionsParLaveur(
+  depuisISO: string,
+  jusquISO?: string
+): Promise<CommissionLaveur[]> {
+  const rows = await db.getAllAsync<{
+    laveur_id: string;
+    nom: string;
+    nombre_ventes: number;
+    chiffre_affaires: number;
+    commission: number;
+  }>(
+    `SELECT
+       l.id as laveur_id,
+       l.nom as nom,
+       COUNT(v.id) as nombre_ventes,
+       SUM(v.total) as chiffre_affaires,
+       SUM(COALESCE(v.commission_montant, 0)) as commission
+     FROM ventes v
+     JOIN laveurs l ON l.id = v.laveur_id
+     WHERE v.laveur_id IS NOT NULL AND v.date >= ? ${jusquISO ? 'AND v.date < ?' : ''}
+     GROUP BY l.id
+     ORDER BY commission DESC`,
+    jusquISO ? [depuisISO, jusquISO] : [depuisISO]
+  );
+  return rows.map((r) => ({
+    laveurId: r.laveur_id,
+    nom: r.nom,
+    nombreVentes: r.nombre_ventes,
+    chiffreAffaires: r.chiffre_affaires,
+    commission: r.commission,
   }));
 }
 

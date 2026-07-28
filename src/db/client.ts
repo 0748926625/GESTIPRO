@@ -70,6 +70,25 @@ export async function migrate(): Promise<void> {
       updated_at TEXT NOT NULL
     );
   `);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS laveurs (
+      id TEXT PRIMARY KEY,
+      etablissement_id TEXT NOT NULL,
+      nom TEXT NOT NULL,
+      taux_commission REAL NOT NULL DEFAULT 0,
+      actif INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL
+    );
+  `);
+
+  const colonnesVentes = await db.getAllAsync<{ name: string }>('PRAGMA table_info(ventes)');
+  if (!colonnesVentes.some((c) => c.name === 'laveur_id')) {
+    await db.execAsync(`ALTER TABLE ventes ADD COLUMN laveur_id TEXT;`);
+  }
+  if (!colonnesVentes.some((c) => c.name === 'commission_montant')) {
+    await db.execAsync(`ALTER TABLE ventes ADD COLUMN commission_montant REAL;`);
+  }
 }
 
 export async function getMeta(cle: string): Promise<string | null> {

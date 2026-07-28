@@ -13,6 +13,7 @@ const CHAMPS_IGNORES_LOCAL = new Set(['created_at']);
 const TABLES: TableSyncConfig[] = [
   { nom: 'users', champsBooleens: ['actif'] },
   { nom: 'produits', champsBooleens: ['actif'] },
+  { nom: 'laveurs', champsBooleens: ['actif'] },
   { nom: 'mouvements_stock' },
   { nom: 'ventes' },
   { nom: 'vente_lignes' },

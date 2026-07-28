@@ -9,6 +9,8 @@ interface VenteRow {
   date: string;
   total: number;
   mode_paiement: string;
+  laveur_id: string | null;
+  commission_montant: number | null;
 }
 
 interface VenteLigneRow {
@@ -24,7 +26,8 @@ export async function creerVente(
   etablissementId: string,
   userId: string,
   lignes: VenteLigneInput[],
-  modePaiement: ModePaiement
+  modePaiement: ModePaiement,
+  laveurId?: string | null
 ): Promise<{ id: string; produitsEnAlerte: AlerteStock[] }> {
   if (lignes.length === 0) {
     throw new Error('Une vente doit contenir au moins un produit');
@@ -35,10 +38,22 @@ export async function creerVente(
   const venteId = Crypto.randomUUID();
   const produitsEnAlerte: AlerteStock[] = [];
 
+  let commissionMontant: number | null = null;
+  if (laveurId) {
+    const laveur = await db.getFirstAsync<{ taux_commission: number }>(
+      'SELECT taux_commission FROM laveurs WHERE id = ?',
+      [laveurId]
+    );
+    if (laveur) {
+      commissionMontant = (total * laveur.taux_commission) / 100;
+    }
+  }
+
   await db.withTransactionAsync(async () => {
     await db.runAsync(
-      'INSERT INTO ventes (id, etablissement_id, user_id, date, total, mode_paiement, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [venteId, etablissementId, userId, date, total, modePaiement, date]
+      `INSERT INTO ventes (id, etablissement_id, user_id, date, total, mode_paiement, laveur_id, commission_montant, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [venteId, etablissementId, userId, date, total, modePaiement, laveurId ?? null, commissionMontant, date]
     );
 
     for (const ligne of lignes) {
@@ -94,13 +109,19 @@ async function chargerVenteAvecLignes(v: VenteRow): Promise<VenteAvecLignes> {
   const user = await db.getFirstAsync<{ nom: string }>('SELECT nom FROM users WHERE id = ?', [
     v.user_id,
   ]);
+  const laveur = v.laveur_id
+    ? await db.getFirstAsync<{ nom: string }>('SELECT nom FROM laveurs WHERE id = ?', [v.laveur_id])
+    : null;
   return {
     id: v.id,
     userId: v.user_id,
     date: v.date,
     total: v.total,
     modePaiement: v.mode_paiement as ModePaiement,
+    laveurId: v.laveur_id,
+    commissionMontant: v.commission_montant,
     nomUser: user?.nom ?? 'Inconnu',
+    nomLaveur: laveur?.nom ?? null,
     lignes: lignes.map((l) => ({
       id: l.id,
       venteId: l.vente_id,

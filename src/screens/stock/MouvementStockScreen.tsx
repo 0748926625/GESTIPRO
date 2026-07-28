@@ -63,7 +63,7 @@ export function MouvementStockScreen(): React.JSX.Element {
       <BackHeader title="Entrée de stock" onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{nomProduit}</Text>

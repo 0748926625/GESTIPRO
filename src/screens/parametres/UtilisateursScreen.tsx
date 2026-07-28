@@ -23,13 +23,14 @@ import { fr } from 'date-fns/locale';
 import { getSecteurConfig } from '../../data/secteurs';
 import { saveEtablissement } from '../../db/etablissement';
 import { createFournisseur, getFournisseurs, setFournisseurActif } from '../../db/fournisseurs';
+import { createLaveur, getLaveurs, setLaveurActif } from '../../db/laveurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
 import { getDerniereSynchro, synchroniser } from '../../sync';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
-import type { Fournisseur, Role, User } from '../../types';
+import type { Fournisseur, Laveur, Role, User } from '../../types';
 
 async function copierLogoLocalement(sourceUri: string): Promise<string> {
   const dest = `${FileSystem.documentDirectory}logo-maquis.jpg`;
@@ -53,6 +54,9 @@ export function UtilisateursScreen(): React.JSX.Element {
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [nomFournisseur, setNomFournisseur] = useState('');
   const [telephoneFournisseur, setTelephoneFournisseur] = useState('');
+  const [laveurs, setLaveurs] = useState<Laveur[]>([]);
+  const [nomLaveur, setNomLaveur] = useState('');
+  const [tauxCommissionLaveur, setTauxCommissionLaveur] = useState('');
   const [nomMaquis, setNomMaquis] = useState(nomMaquisActuel);
   const [logoUri, setLogoUri] = useState<string | null>(logoActuel);
   const [enregistrementEtablissement, setEnregistrementEtablissement] = useState(false);
@@ -67,6 +71,7 @@ export function UtilisateursScreen(): React.JSX.Element {
   const reload = useCallback(() => {
     getAllUsers().then(setUsers);
     getFournisseurs(false).then(setFournisseurs);
+    getLaveurs(false).then(setLaveurs);
     getDerniereSynchro().then(setDerniereSynchro);
   }, []);
 
@@ -169,6 +174,24 @@ export function UtilisateursScreen(): React.JSX.Element {
     reload();
   };
 
+  const handleCreerLaveur = async (): Promise<void> => {
+    const taux = Number(tauxCommissionLaveur);
+    if (!nomLaveur.trim() || !tauxCommissionLaveur.trim() || Number.isNaN(taux) || taux < 0) {
+      Alert.alert('Erreur', 'Le nom et un taux de commission valide (%) sont requis.');
+      return;
+    }
+    if (!etablissementId) return;
+    await createLaveur(etablissementId, nomLaveur.trim(), taux);
+    setNomLaveur('');
+    setTauxCommissionLaveur('');
+    reload();
+  };
+
+  const handleToggleLaveurActif = async (laveur: Laveur): Promise<void> => {
+    await setLaveurActif(laveur.id, !laveur.actif);
+    reload();
+  };
+
   const handleAppeler = (): void => {
     Linking.openURL('tel:+2250748926625');
   };
@@ -180,7 +203,7 @@ export function UtilisateursScreen(): React.JSX.Element {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
@@ -335,6 +358,61 @@ export function UtilisateursScreen(): React.JSX.Element {
                         <TouchableOpacity onPress={() => handleToggleFournisseurActif(f)}>
                           <Text style={f.actif ? styles.desactiverText : styles.activerText}>
                             {f.actif ? 'Désactiver' : 'Activer'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
+          {secteurConfig.gestionLaveurs && (
+            <>
+              <View style={styles.formCard}>
+                <Text style={styles.formTitle}>Nouveau laveur</Text>
+                <Text style={styles.formSubtitle}>
+                  Le taux de commission s'applique automatiquement à chaque vente qui lui est
+                  attribuée.
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nom du laveur"
+                  value={nomLaveur}
+                  onChangeText={setNomLaveur}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Taux de commission (%)"
+                  value={tauxCommissionLaveur}
+                  onChangeText={setTauxCommissionLaveur}
+                  keyboardType="numeric"
+                />
+                <TouchableOpacity style={styles.createButton} onPress={handleCreerLaveur}>
+                  <Ionicons name="person-add-outline" size={18} color="#FFF" />
+                  <Text style={styles.createButtonText}>Ajouter le laveur</Text>
+                </TouchableOpacity>
+              </View>
+
+              {laveurs.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Laveurs</Text>
+                  {laveurs.map((l) => (
+                    <View key={l.id} style={styles.userCard}>
+                      <View style={styles.userRow}>
+                        <View style={styles.userAvatar}>
+                          <Ionicons name="water-outline" size={20} color={colors.primary} />
+                        </View>
+                        <View style={styles.userInfo}>
+                          <Text style={styles.userNom}>{l.nom}</Text>
+                          <Text style={styles.userRole}>
+                            Commission {l.tauxCommission}% · {l.actif ? 'Actif' : 'Désactivé'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity onPress={() => handleToggleLaveurActif(l)}>
+                          <Text style={l.actif ? styles.desactiverText : styles.activerText}>
+                            {l.actif ? 'Désactiver' : 'Activer'}
                           </Text>
                         </TouchableOpacity>
                       </View>

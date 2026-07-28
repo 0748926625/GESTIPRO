@@ -92,7 +92,7 @@ export function OperationsScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <BackHeader title="Recettes & dépenses" onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Nouvelle opération</Text>
