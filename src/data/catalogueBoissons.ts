@@ -5,6 +5,10 @@ export interface ProduitSuggere {
   categorie: string;
   unite: string;
   icone?: number;
+  // Estimation du prix d'achat unitaire (F CFA), calculée à partir du prix par
+  // casier/carton affiché sur la boutique en ligne officielle Solibra (achat en
+  // gros par unité de conditionnement). À ajuster selon le dépôt réel du gérant.
+  prixAchatEstime?: number;
 }
 
 export const CATEGORIES_BOISSONS: string[] = [
@@ -54,18 +58,21 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/castel.png'),
+    prixAchatEstime: 365, // casier 33cl x24 : 8 800 F
   },
   {
     nom: 'Beaufort',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/beaufort.png'),
+    prixAchatEstime: 420, // casier 33cl x24 : 10 000 F
   },
   {
     nom: 'Guinness Foreign Extra',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/guinness-foreign-extra.png'),
+    prixAchatEstime: 615, // casier 33cl x24 : 14 800 F
   },
   { nom: 'Heineken', categorie: 'Bières', unite: 'bouteille' },
   { nom: 'Desperados', categorie: 'Bières', unite: 'bouteille' },
@@ -74,48 +81,56 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/bock.png'),
+    prixAchatEstime: 285, // casier 33cl x24 : 6 800 F
   },
   {
     nom: 'Budweiser',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/budweiser.png'),
+    prixAchatEstime: 625, // carton 33cl x24 : 15 000 F
   },
   {
     nom: 'Corona Extra',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/corona-extra.png'),
+    prixAchatEstime: 665, // carton 33cl x24 : 16 000 F
   },
   {
     nom: 'Doppel Munich',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/doppel-munich.png'),
+    prixAchatEstime: 265, // casier 33cl x24 : 6 300 F
   },
   {
     nom: 'Sombreros',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/sombreros.png'),
+    prixAchatEstime: 265, // casier 33cl x24 : 6 300 F
   },
   {
     nom: 'Chill Citron',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/chill-citron.png'),
+    prixAchatEstime: 375, // casier 50cl x12 : 4 500 F
   },
   {
     nom: 'Racines',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/racines.png'),
+    prixAchatEstime: 295, // casier 33cl x24 : 7 100 F
   },
   {
     nom: 'Racines Fort',
     categorie: 'Bières',
     unite: 'bouteille',
     icone: require('../../assets/boissons/racines-fort.png'),
+    prixAchatEstime: 475, // casier 50cl x12 : 5 700 F
   },
 
   // Sodas & jus industriels
@@ -131,6 +146,7 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Sodas & jus industriels',
     unite: 'bouteille',
     icone: require('../../assets/boissons/youki-orange.png'),
+    prixAchatEstime: 165, // casier VC 30cl x24 : 3 900 F
   },
   { nom: 'Djino', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
   {
@@ -138,18 +154,21 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Sodas & jus industriels',
     unite: 'bouteille',
     icone: require('../../assets/boissons/orangina.png'),
+    prixAchatEstime: 290, // casier VC 30cl x24 : 7 000 F
   },
   {
     nom: 'YouZou',
     categorie: 'Sodas & jus industriels',
     unite: 'bouteille',
     icone: require('../../assets/boissons/youzou.png'),
+    prixAchatEstime: 165, // casier VC 30cl x24 : 3 900 F
   },
   {
     nom: 'World Cola',
     categorie: 'Sodas & jus industriels',
     unite: 'bouteille',
     icone: require('../../assets/boissons/world-cola.png'),
+    prixAchatEstime: 165, // casier VC 30cl x24 : 3 900 F
   },
 
   // Eaux
@@ -170,6 +189,7 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Malt & énergisants',
     unite: 'bouteille',
     icone: require('../../assets/boissons/malta-guinness.png'),
+    prixAchatEstime: 385, // casier 30cl x24 : 9 200 F
   },
   { nom: 'Red Bull', categorie: 'Malt & énergisants', unite: 'canette' },
   {
@@ -177,12 +197,14 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
     categorie: 'Malt & énergisants',
     unite: 'canette',
     icone: require('../../assets/boissons/xxl-energy.png'),
+    prixAchatEstime: 355, // carton canette 33cl x24 : 8 500 F
   },
   {
     nom: 'Doppel Energy Malt',
     categorie: 'Malt & énergisants',
     unite: 'canette',
     icone: require('../../assets/boissons/doppel-energy-malt.png'),
+    prixAchatEstime: 355, // carton canette 33cl x24 : 8 500 F
   },
 
   // Vins & spiritueux

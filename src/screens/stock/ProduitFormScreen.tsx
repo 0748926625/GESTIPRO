@@ -46,6 +46,7 @@ export function ProduitFormScreen(): React.JSX.Element {
   const [seuilAlerte, setSeuilAlerte] = useState('0');
   const [prixAchat, setPrixAchat] = useState('0');
   const [prixVente, setPrixVente] = useState('0');
+  const [prixAchatEstime, setPrixAchatEstime] = useState(false);
   const [chargement, setChargement] = useState(produitId !== undefined);
 
   useEffect(() => {
@@ -69,6 +70,10 @@ export function ProduitFormScreen(): React.JSX.Element {
     setCategorie(suggestion.categorie);
     setCategoriePersonnalisee(false);
     setUnite(suggestion.unite);
+    setPrixAchatEstime(suggestion.prixAchatEstime !== undefined);
+    if (suggestion.prixAchatEstime !== undefined) {
+      setPrixAchat(String(suggestion.prixAchatEstime));
+    }
   };
 
   const handleChoisirCategorie = (cat: string): void => {
@@ -212,9 +217,18 @@ export function ProduitFormScreen(): React.JSX.Element {
         <TextInput
           style={styles.input}
           value={prixAchat}
-          onChangeText={setPrixAchat}
+          onChangeText={(t) => {
+            setPrixAchat(t);
+            setPrixAchatEstime(false);
+          }}
           keyboardType="numeric"
         />
+        {prixAchatEstime && (
+          <Text style={styles.estimationTexte}>
+            Estimation basée sur le prix de gros (casier) constaté chez Solibra — à ajuster selon
+            votre fournisseur.
+          </Text>
+        )}
 
         <Text style={styles.label}>Prix de vente (F CFA)</Text>
         <TextInput
@@ -290,6 +304,12 @@ const styles = StyleSheet.create({
   },
   inputSuite: {
     marginTop: spacing.sm,
+  },
+  estimationTexte: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    fontStyle: 'italic',
   },
   saveButton: {
     flexDirection: 'row',
