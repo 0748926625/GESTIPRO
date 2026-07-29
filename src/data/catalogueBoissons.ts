@@ -4,6 +4,7 @@ export interface ProduitSuggere {
   nom: string;
   categorie: string;
   unite: string;
+  icone?: number;
 }
 
 export const CATEGORIES_BOISSONS: string[] = [
@@ -48,11 +49,74 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
   // Bières
   { nom: 'Flag', categorie: 'Bières', unite: 'bouteille' },
   { nom: 'Ivoire', categorie: 'Bières', unite: 'bouteille' },
-  { nom: 'Castel', categorie: 'Bières', unite: 'bouteille' },
-  { nom: 'Beaufort', categorie: 'Bières', unite: 'bouteille' },
-  { nom: 'Guinness Foreign Extra', categorie: 'Bières', unite: 'bouteille' },
+  {
+    nom: 'Castel',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/castel.png'),
+  },
+  {
+    nom: 'Beaufort',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/beaufort.png'),
+  },
+  {
+    nom: 'Guinness Foreign Extra',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/guinness-foreign-extra.png'),
+  },
   { nom: 'Heineken', categorie: 'Bières', unite: 'bouteille' },
   { nom: 'Desperados', categorie: 'Bières', unite: 'bouteille' },
+  {
+    nom: 'Bock',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/bock.png'),
+  },
+  {
+    nom: 'Budweiser',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/budweiser.png'),
+  },
+  {
+    nom: 'Corona Extra',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/corona-extra.png'),
+  },
+  {
+    nom: 'Doppel Munich',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/doppel-munich.png'),
+  },
+  {
+    nom: 'Sombreros',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/sombreros.png'),
+  },
+  {
+    nom: 'Chill Citron',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/chill-citron.png'),
+  },
+  {
+    nom: 'Racines',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/racines.png'),
+  },
+  {
+    nom: 'Racines Fort',
+    categorie: 'Bières',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/racines-fort.png'),
+  },
 
   // Sodas & jus industriels
   { nom: 'Coca-Cola', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
@@ -62,7 +126,31 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
   { nom: 'Top Pamplemousse', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
   { nom: 'Top Ananas', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
   { nom: 'Youki Pomme', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
+  {
+    nom: 'Youki Orange',
+    categorie: 'Sodas & jus industriels',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/youki-orange.png'),
+  },
   { nom: 'Djino', categorie: 'Sodas & jus industriels', unite: 'bouteille' },
+  {
+    nom: 'Orangina',
+    categorie: 'Sodas & jus industriels',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/orangina.png'),
+  },
+  {
+    nom: 'YouZou',
+    categorie: 'Sodas & jus industriels',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/youzou.png'),
+  },
+  {
+    nom: 'World Cola',
+    categorie: 'Sodas & jus industriels',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/world-cola.png'),
+  },
 
   // Eaux
   { nom: 'Awa', categorie: 'Eaux', unite: 'bouteille' },
@@ -77,12 +165,43 @@ export const PRODUITS_SUGGERES: ProduitSuggere[] = [
 
   // Malt & énergisants
   { nom: 'Booster', categorie: 'Malt & énergisants', unite: 'bouteille' },
-  { nom: 'Malta Guinness', categorie: 'Malt & énergisants', unite: 'bouteille' },
+  {
+    nom: 'Malta Guinness',
+    categorie: 'Malt & énergisants',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/malta-guinness.png'),
+  },
   { nom: 'Red Bull', categorie: 'Malt & énergisants', unite: 'canette' },
+  {
+    nom: 'XXL Energy',
+    categorie: 'Malt & énergisants',
+    unite: 'canette',
+    icone: require('../../assets/boissons/xxl-energy.png'),
+  },
+  {
+    nom: 'Doppel Energy Malt',
+    categorie: 'Malt & énergisants',
+    unite: 'canette',
+    icone: require('../../assets/boissons/doppel-energy-malt.png'),
+  },
 
   // Vins & spiritueux
   { nom: 'Pastis 51', categorie: 'Vins & spiritueux', unite: 'bouteille' },
   { nom: 'Whisky', categorie: 'Vins & spiritueux', unite: 'bouteille' },
   { nom: 'Vin rouge', categorie: 'Vins & spiritueux', unite: 'bouteille' },
   { nom: 'Vin rosé', categorie: 'Vins & spiritueux', unite: 'bouteille' },
+  {
+    nom: 'Valpierre',
+    categorie: 'Vins & spiritueux',
+    unite: 'bouteille',
+    icone: require('../../assets/boissons/valpierre.png'),
+  },
 ];
+
+export const ICONES_PRODUITS: Record<string, number> = PRODUITS_SUGGERES.reduce(
+  (acc, p) => {
+    if (p.icone) acc[p.nom] = p.icone;
+    return acc;
+  },
+  {} as Record<string, number>
+);

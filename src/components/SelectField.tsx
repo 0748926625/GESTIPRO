@@ -11,6 +11,7 @@ interface SelectFieldProps<T> {
   keyExtractor: (item: T) => string;
   renderLabel: (item: T) => string;
   renderSubtitle?: (item: T) => string | undefined;
+  renderIcon?: (item: T) => React.ReactNode;
   onSelect: (item: T) => void;
   searchable?: boolean;
   searchPredicate?: (item: T, query: string) => boolean;
@@ -25,6 +26,7 @@ export function SelectField<T>({
   keyExtractor,
   renderLabel,
   renderSubtitle,
+  renderIcon,
   onSelect,
   searchable,
   searchPredicate,
@@ -93,10 +95,15 @@ export function SelectField<T>({
                     fermer();
                   }}
                 >
-                  <Text style={styles.optionLabel}>{renderLabel(item)}</Text>
-                  {renderSubtitle && renderSubtitle(item) && (
-                    <Text style={styles.optionSubtitle}>{renderSubtitle(item)}</Text>
-                  )}
+                  <View style={styles.optionRow}>
+                    {renderIcon && renderIcon(item)}
+                    <View style={styles.optionTextes}>
+                      <Text style={styles.optionLabel}>{renderLabel(item)}</Text>
+                      {renderSubtitle && renderSubtitle(item) && (
+                        <Text style={styles.optionSubtitle}>{renderSubtitle(item)}</Text>
+                      )}
+                    </View>
+                  </View>
                 </TouchableOpacity>
               )}
             />
@@ -184,6 +191,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  optionTextes: {
+    flex: 1,
   },
   optionLabel: {
     fontSize: 16,

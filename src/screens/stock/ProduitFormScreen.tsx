@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -153,6 +154,11 @@ export function ProduitFormScreen(): React.JSX.Element {
               keyExtractor={(item) => item.nom}
               renderLabel={(item) => item.nom}
               renderSubtitle={(item) => item.categorie}
+              renderIcon={(item) =>
+                item.icone ? (
+                  <Image source={item.icone} style={styles.suggestionIcone} resizeMode="contain" />
+                ) : undefined
+              }
               onSelect={handleChoisirSuggestion}
               searchable
               icon="search"
@@ -256,6 +262,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+  },
+  suggestionIcone: {
+    width: 32,
+    height: 32,
   },
   suggestionTitle: {
     fontSize: 14,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getCategorieColor } from '../data/catalogueBoissons';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { getCategorieColor, ICONES_PRODUITS } from '../data/catalogueBoissons';
 import { getSecteurConfig } from '../data/secteurs';
 import { useEtablissementStore } from '../store/etablissementStore';
 import { cardShadow, colors, spacing, withOpacity } from '../theme';
@@ -17,11 +17,16 @@ export function ProduitCard({ produit, onPress }: ProduitCardProps): React.JSX.E
   const config = getSecteurConfig(secteur);
   const stockBas = config.stockActif && produit.quantiteStock <= produit.seuilAlerte;
   const couleurCategorie = getCategorieColor(produit.categorie);
+  const icone = ICONES_PRODUITS[produit.nom];
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} disabled={!onPress} activeOpacity={0.7}>
-      <View style={[styles.avatar, { backgroundColor: withOpacity(couleurCategorie, 0.15) }]}>
-        <Ionicons name={config.icone} size={20} color={couleurCategorie} />
-      </View>
+      {icone ? (
+        <Image source={icone} style={styles.avatarImage} resizeMode="contain" />
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: withOpacity(couleurCategorie, 0.15) }]}>
+          <Ionicons name={config.icone} size={20} color={couleurCategorie} />
+        </View>
+      )}
       <View style={styles.info}>
         <Text style={styles.nom}>{produit.nom}</Text>
         {produit.categorie ? (
@@ -65,6 +70,10 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 38,
+    height: 38,
   },
   info: {
     flex: 1,
