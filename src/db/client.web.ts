@@ -45,7 +45,12 @@ async function chargerBytesPersistes(): Promise<Uint8Array | null> {
 }
 
 async function persister(): Promise<void> {
-  if (!sqlJsDb) return;
+  // Ne jamais appeler sqlJsDb.export() au milieu d'une transaction ouverte (BEGIN sans
+  // COMMIT/ROLLBACK) : ça perturbe l'état interne de sql.js et corrompt la transaction
+  // en cours (observé : "cannot rollback - no transaction is active", vente qui ne
+  // s'enregistrait jamais). withTransactionAsync se charge de persister une seule fois,
+  // une fois la transaction bien terminée.
+  if (!sqlJsDb || dansTransaction) return;
   const bytes = sqlJsDb.export();
   const idb = await ouvrirIndexedDB();
   await new Promise<void>((resolve, reject) => {
@@ -69,53 +74,92 @@ async function ensureDb(): Promise<SqlJsDatabase> {
   return initPromise;
 }
 
+async function runBrut(sql: string, params: unknown[] = []): Promise<void> {
+  const database = await ensureDb();
+  database.run(sql, params as never);
+}
+
+async function getFirstBrut<T>(sql: string, params: unknown[] = []): Promise<T | null> {
+  const database = await ensureDb();
+  const stmt = database.prepare(sql);
+  stmt.bind(params as never);
+  const trouve = stmt.step();
+  const resultat = trouve ? ((stmt.getAsObject() as unknown) as T) : null;
+  stmt.free();
+  return resultat;
+}
+
+async function getAllBrut<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+  const database = await ensureDb();
+  const stmt = database.prepare(sql);
+  stmt.bind(params as never);
+  const lignes: T[] = [];
+  while (stmt.step()) {
+    lignes.push((stmt.getAsObject() as unknown) as T);
+  }
+  stmt.free();
+  return lignes;
+}
+
+// File d'attente qui sérialise toutes les opérations sur la base : sql.js n'a qu'une
+// seule connexion partagée, donc deux appels concurrents (ex: une vente en cours et la
+// synchro en tâche de fond qui se déclenche au même moment) pouvaient entremêler leurs
+// BEGIN/COMMIT/ROLLBACK et corrompre l'état de la transaction — observé en conditions
+// réelles : "cannot rollback - no transaction is active" et la vente qui ne s'enregistrait
+// jamais. `dansTransaction` évite l'interblocage : les appels imbriqués depuis le callback
+// de withTransactionAsync s'exécutent directement au lieu de rejoindre la file (qui,
+// elle, attend justement la fin de cette même transaction).
+let cola: Promise<void> = Promise.resolve();
+let dansTransaction = false;
+
+function enqueue<T>(tache: () => Promise<T>): Promise<T> {
+  if (dansTransaction) return tache();
+  const resultat = cola.then(tache, tache);
+  cola = resultat.then(
+    () => undefined,
+    () => undefined
+  );
+  return resultat;
+}
+
 export const db = {
-  async execAsync(sql: string): Promise<void> {
-    const database = await ensureDb();
-    database.run(sql);
-    await persister();
-  },
+  execAsync: (sql: string): Promise<void> =>
+    enqueue(async () => {
+      const database = await ensureDb();
+      database.run(sql);
+      await persister();
+    }),
 
-  async runAsync(sql: string, params: unknown[] = []): Promise<void> {
-    const database = await ensureDb();
-    database.run(sql, params as never);
-    await persister();
-  },
+  runAsync: (sql: string, params: unknown[] = []): Promise<void> =>
+    enqueue(async () => {
+      await runBrut(sql, params);
+      await persister();
+    }),
 
-  async getFirstAsync<T>(sql: string, params: unknown[] = []): Promise<T | null> {
-    const database = await ensureDb();
-    const stmt = database.prepare(sql);
-    stmt.bind(params as never);
-    const trouve = stmt.step();
-    const resultat = trouve ? ((stmt.getAsObject() as unknown) as T) : null;
-    stmt.free();
-    return resultat;
-  },
+  getFirstAsync: <T>(sql: string, params: unknown[] = []): Promise<T | null> =>
+    enqueue(() => getFirstBrut<T>(sql, params)),
 
-  async getAllAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const database = await ensureDb();
-    const stmt = database.prepare(sql);
-    stmt.bind(params as never);
-    const lignes: T[] = [];
-    while (stmt.step()) {
-      lignes.push((stmt.getAsObject() as unknown) as T);
-    }
-    stmt.free();
-    return lignes;
-  },
+  getAllAsync: <T>(sql: string, params: unknown[] = []): Promise<T[]> =>
+    enqueue(() => getAllBrut<T>(sql, params)),
 
-  async withTransactionAsync(callback: () => Promise<void>): Promise<void> {
-    const database = await ensureDb();
-    database.run('BEGIN TRANSACTION;');
-    try {
-      await callback();
-      database.run('COMMIT;');
-    } catch (e) {
-      database.run('ROLLBACK;');
-      throw e;
-    }
-    await persister();
-  },
+  withTransactionAsync: (callback: () => Promise<void>): Promise<void> =>
+    enqueue(async () => {
+      const database = await ensureDb();
+      dansTransaction = true;
+      try {
+        database.run('BEGIN TRANSACTION;');
+        try {
+          await callback();
+          database.run('COMMIT;');
+        } catch (e) {
+          database.run('ROLLBACK;');
+          throw e;
+        }
+      } finally {
+        dansTransaction = false;
+      }
+      await persister();
+    }),
 };
 
 const SCHEMA_VERSION = 2;
