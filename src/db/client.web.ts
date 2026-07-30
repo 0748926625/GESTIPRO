@@ -13,15 +13,25 @@ const CLE_INDEXEDDB = 'db';
 let sqlJsDb: SqlJsDatabase | null = null;
 let initPromise: Promise<SqlJsDatabase> | null = null;
 
+// Connexion IndexedDB unique, ouverte une seule fois et réutilisée pour toutes les
+// lectures/écritures : en ouvrir une nouvelle à chaque appel (comme dans une version
+// précédente) laissait des dizaines de connexions actives sans jamais les fermer, ce qui
+// pouvait faire "geler" silencieusement les écritures suivantes sur certains navigateurs
+// (observé : la validation d'une vente qui ne faisait plus rien sur Safari iOS).
+let idbPromise: Promise<IDBDatabase> | null = null;
+
 function ouvrirIndexedDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(NOM_INDEXEDDB, 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(STORE_INDEXEDDB);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+  if (!idbPromise) {
+    idbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(NOM_INDEXEDDB, 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore(STORE_INDEXEDDB);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  return idbPromise;
 }
 
 async function chargerBytesPersistes(): Promise<Uint8Array | null> {
