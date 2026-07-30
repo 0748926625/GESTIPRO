@@ -194,6 +194,15 @@ export async function partagerPdf(fichier: FichierPdf): Promise<void> {
 const CLE_DOSSIER_TELECHARGEMENT = 'gestipro_dossier_telechargement_uri';
 
 export async function telechargerPdf(fichier: FichierPdf): Promise<'telecharge' | 'partage' | 'annule'> {
+  if (Platform.OS === 'web') {
+    const lien = document.createElement('a');
+    lien.href = fichier.uri;
+    lien.download = fichier.nomFichier;
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+    return 'telecharge';
+  }
   if (Platform.OS !== 'android') {
     await partagerPdf(fichier);
     return 'partage';

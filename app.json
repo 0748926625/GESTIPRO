@@ -19,7 +19,16 @@
       "versionCode": 2
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "GestiPro",
+      "shortName": "GestiPro",
+      "themeColor": "#9A1B2F",
+      "backgroundColor": "#FFFFFF",
+      "display": "standalone",
+      "lang": "fr"
+    },
+    "experiments": {
+      "baseUrl": "/GESTIPRO"
     },
     "plugins": [
       "expo-sqlite",

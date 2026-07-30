@@ -15,7 +15,7 @@ Notifications.setNotificationHandler({
 });
 
 export async function initialiserNotificationsStock(): Promise<void> {
-  if (initialise) return;
+  if (initialise || Platform.OS === 'web') return;
   initialise = true;
 
   if (Platform.OS === 'android') {
@@ -37,6 +37,7 @@ export async function initialiserNotificationsStock(): Promise<void> {
 }
 
 export async function notifierStockBas(nomProduit: string, quantite: number, unite: string): Promise<void> {
+  if (Platform.OS === 'web') return;
   try {
     await Notifications.scheduleNotificationAsync({
       content: {

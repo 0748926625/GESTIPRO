@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,13 +27,17 @@ import { createFournisseur, getFournisseurs, setFournisseurActif } from '../../d
 import { createLaveur, getLaveurs, setLaveurActif } from '../../db/laveurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
 import { getDerniereSynchro, synchroniser } from '../../sync';
+import type { ParametresStackParamList } from '../../navigation/ParametresStack';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Fournisseur, Laveur, Role, User } from '../../types';
 
+type Nav = NativeStackNavigationProp<ParametresStackParamList, 'ParametresHome'>;
+
 async function copierLogoLocalement(sourceUri: string): Promise<string> {
+  if (Platform.OS === 'web') return sourceUri;
   const dest = `${FileSystem.documentDirectory}logo-maquis.jpg`;
   const info = await FileSystem.getInfoAsync(dest);
   if (info.exists) {
@@ -43,8 +48,10 @@ async function copierLogoLocalement(sourceUri: string): Promise<string> {
 }
 
 export function UtilisateursScreen(): React.JSX.Element {
+  const navigation = useNavigation<Nav>();
   const currentUser = useAuthStore((s) => s.currentUser);
   const etablissementId = useSessionStore((s) => s.etablissementId);
+  const etablissements = useSessionStore((s) => s.etablissements);
   const nomMaquisActuel = useEtablissementStore((s) => s.nom);
   const logoActuel = useEtablissementStore((s) => s.logoUri);
   const secteur = useEtablissementStore((s) => s.secteur);
@@ -235,6 +242,24 @@ export function UtilisateursScreen(): React.JSX.Element {
             ) : (
               <Ionicons name="refresh-outline" size={20} color={colors.primary} />
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.syncCard}
+            onPress={() => navigation.navigate('Etablissements')}
+          >
+            <View style={styles.syncCardLeft}>
+              <Ionicons name="business-outline" size={20} color={colors.primary} />
+              <View>
+                <Text style={styles.syncCardTitle}>Mes établissements</Text>
+                <Text style={styles.syncCardSubtitle}>
+                  {etablissements.length > 1
+                    ? `${etablissements.length} établissements · changer ou en créer un`
+                    : "Gérer plusieurs établissements avec ce compte"}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
           </TouchableOpacity>
 
           <View style={styles.formCard}>

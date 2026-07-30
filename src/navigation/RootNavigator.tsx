@@ -54,8 +54,8 @@ export function RootNavigator(): React.JSX.Element {
   }, [initialiserSession]);
 
   useEffect(() => {
+    setLocalPret(false);
     if (!etablissementId) {
-      setLocalPret(false);
       return;
     }
     (async () => {

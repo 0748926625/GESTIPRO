@@ -1,11 +1,116 @@
-import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
+import initSqlJs, { type Database as SqlJsDatabase } from 'sql.js';
 
-export const db: SQLiteDatabase = openDatabaseSync('gestipro.db');
+// Variante web de client.ts (résolue automatiquement par Metro à la place de client.ts
+// quand la cible est "web") : même schéma, mêmes fonctions exportées, mais le moteur
+// SQLite tourne en WASM dans le navigateur (sql.js, stable, sans en-têtes serveur
+// particuliers) au lieu du module natif expo-sqlite. Persisté dans IndexedDB pour
+// survivre aux rechargements de page.
+
+const NOM_INDEXEDDB = 'gestipro-web';
+const STORE_INDEXEDDB = 'sqlite';
+const CLE_INDEXEDDB = 'db';
+
+let sqlJsDb: SqlJsDatabase | null = null;
+let initPromise: Promise<SqlJsDatabase> | null = null;
+
+function ouvrirIndexedDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(NOM_INDEXEDDB, 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(STORE_INDEXEDDB);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function chargerBytesPersistes(): Promise<Uint8Array | null> {
+  const idb = await ouvrirIndexedDB();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(STORE_INDEXEDDB, 'readonly');
+    const req = tx.objectStore(STORE_INDEXEDDB).get(CLE_INDEXEDDB);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function persister(): Promise<void> {
+  if (!sqlJsDb) return;
+  const bytes = sqlJsDb.export();
+  const idb = await ouvrirIndexedDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = idb.transaction(STORE_INDEXEDDB, 'readwrite');
+    tx.objectStore(STORE_INDEXEDDB).put(bytes, CLE_INDEXEDDB);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function ensureDb(): Promise<SqlJsDatabase> {
+  if (sqlJsDb) return sqlJsDb;
+  if (!initPromise) {
+    initPromise = (async () => {
+      const SQL = await initSqlJs({ locateFile: (file) => new URL(file, document.baseURI).href });
+      const bytesExistants = await chargerBytesPersistes().catch(() => null);
+      sqlJsDb = bytesExistants ? new SQL.Database(bytesExistants) : new SQL.Database();
+      return sqlJsDb;
+    })();
+  }
+  return initPromise;
+}
+
+export const db = {
+  async execAsync(sql: string): Promise<void> {
+    const database = await ensureDb();
+    database.run(sql);
+    await persister();
+  },
+
+  async runAsync(sql: string, params: unknown[] = []): Promise<void> {
+    const database = await ensureDb();
+    database.run(sql, params as never);
+    await persister();
+  },
+
+  async getFirstAsync<T>(sql: string, params: unknown[] = []): Promise<T | null> {
+    const database = await ensureDb();
+    const stmt = database.prepare(sql);
+    stmt.bind(params as never);
+    const trouve = stmt.step();
+    const resultat = trouve ? ((stmt.getAsObject() as unknown) as T) : null;
+    stmt.free();
+    return resultat;
+  },
+
+  async getAllAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+    const database = await ensureDb();
+    const stmt = database.prepare(sql);
+    stmt.bind(params as never);
+    const lignes: T[] = [];
+    while (stmt.step()) {
+      lignes.push((stmt.getAsObject() as unknown) as T);
+    }
+    stmt.free();
+    return lignes;
+  },
+
+  async withTransactionAsync(callback: () => Promise<void>): Promise<void> {
+    const database = await ensureDb();
+    database.run('BEGIN TRANSACTION;');
+    try {
+      await callback();
+      database.run('COMMIT;');
+    } catch (e) {
+      database.run('ROLLBACK;');
+      throw e;
+    }
+    await persister();
+  },
+};
 
 const SCHEMA_VERSION = 2;
 
 export async function migrate(): Promise<void> {
-  await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS app_meta (
       cle TEXT PRIMARY KEY,
@@ -91,9 +196,6 @@ export async function migrate(): Promise<void> {
   }
 }
 
-// Vide les données locales propres à l'établissement actif (avant de basculer
-// vers un autre établissement) : chaque établissement ne garde en cache local
-// que ses propres données, jamais un mélange de plusieurs établissements.
 export async function viderDonneesEtablissement(): Promise<void> {
   await db.execAsync(`
     DELETE FROM vente_lignes;

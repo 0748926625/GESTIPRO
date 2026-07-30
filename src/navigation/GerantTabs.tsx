@@ -7,7 +7,7 @@ import { useEtablissementStore } from '../store/etablissementStore';
 import { StockStack } from './StockStack';
 import { VentesStack } from './VentesStack';
 import { RapportsStack } from './RapportsStack';
-import { UtilisateursScreen } from '../screens/parametres/UtilisateursScreen';
+import { ParametresStack } from './ParametresStack';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -51,7 +51,7 @@ export function GerantTabs(): React.JSX.Element {
       />
       <Tab.Screen name="Ventes" component={VentesStack} options={{ title: 'Ventes' }} />
       <Tab.Screen name="Rapports" component={RapportsStack} options={{ title: 'Rapports' }} />
-      <Tab.Screen name="Parametres" component={UtilisateursScreen} options={{ title: 'Paramètres' }} />
+      <Tab.Screen name="Parametres" component={ParametresStack} options={{ title: 'Paramètres' }} />
     </Tab.Navigator>
   );
 }
