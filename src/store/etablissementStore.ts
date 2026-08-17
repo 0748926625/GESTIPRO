@@ -31,8 +31,6 @@ export const useEtablissementStore = create<EtablissementState>((set) => ({
   set: (nom, logoUri) => set({ nom, logoUri }),
 }));
 
-export function estAbonnementValide(essaiFin: string | null, abonnementActif: boolean): boolean {
-  if (abonnementActif) return true;
-  if (!essaiFin) return true;
-  return new Date() < new Date(essaiFin);
+export function estAbonnementValide(_essaiFin: string | null, _abonnementActif: boolean): boolean {
+  return true;
 }
