@@ -281,11 +281,15 @@ export function RapportsScreen(): React.JSX.Element {
         {config.gestionLaveurs && (
           <>
             <View style={styles.sectionHeader}>
-              <Ionicons name="water-outline" size={16} color={colors.text} />
-              <Text style={styles.sectionTitle}>Commissions par laveur</Text>
+              <Ionicons name={config.icone} size={16} color={colors.text} />
+              <Text style={styles.sectionTitle}>
+                Commissions par {(config.libelleAgent ?? 'Laveur').toLowerCase()}
+              </Text>
             </View>
             {commissionsLaveurs.length === 0 ? (
-              <EmptyState message="Aucune vente attribuée à un laveur sur cette période." />
+              <EmptyState
+                message={`Aucune vente attribuée à un ${(config.libelleAgent ?? 'Laveur').toLowerCase()} sur cette période.`}
+              />
             ) : (
               commissionsLaveurs.map((c) => (
                 <View key={c.laveurId} style={styles.modeRow}>

@@ -2,7 +2,7 @@ import type { ModePaiement } from '../data/modesPaiement';
 
 export type Role = 'gerant' | 'serveur';
 
-export type Secteur = 'maquis' | 'restaurant' | 'lavage_auto' | 'commerce';
+export type Secteur = 'maquis' | 'restaurant' | 'lavage_auto' | 'commerce' | 'livraison';
 
 export interface User {
   id: string;

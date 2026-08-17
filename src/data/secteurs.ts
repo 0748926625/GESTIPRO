@@ -9,6 +9,8 @@ export interface SecteurConfig {
   icone: keyof typeof Ionicons.glyphMap;
   stockActif: boolean;
   gestionLaveurs: boolean;
+  libelleAgent?: string;
+  libelleAgentPluriel?: string;
   libelleArticle: string;
   libelleArticlePluriel: string;
   categories: string[];
@@ -61,6 +63,8 @@ export const SECTEURS: SecteurConfig[] = [
     icone: 'car-outline',
     stockActif: false,
     gestionLaveurs: true,
+    libelleAgent: 'Laveur',
+    libelleAgentPluriel: 'Laveurs',
     libelleArticle: 'service',
     libelleArticlePluriel: 'services',
     categories: [
@@ -105,6 +109,41 @@ export const SECTEURS: SecteurConfig[] = [
       { nom: 'Pâte dentifrice', categorie: 'Hygiène & beauté', unite: 'pièce' },
       { nom: 'Ampoule électrique', categorie: 'Quincaillerie', unite: 'pièce' },
       { nom: 'Pile (AA/AAA)', categorie: 'Quincaillerie', unite: 'pièce' },
+    ],
+  },
+  {
+    value: 'livraison',
+    label: 'Livraison',
+    description: 'Coursiers, livraison à domicile et courses (sans gestion de stock)',
+    icone: 'bicycle-outline',
+    stockActif: false,
+    gestionLaveurs: true,
+    libelleAgent: 'Livreur',
+    libelleAgentPluriel: 'Livreurs',
+    libelleArticle: 'tarif',
+    libelleArticlePluriel: 'tarifs',
+    categories: [
+      'Livraison courte distance',
+      'Livraison moyenne distance',
+      'Livraison longue distance',
+      'Autre',
+    ],
+    suggestions: [
+      {
+        nom: 'Livraison courte distance (1000 F)',
+        categorie: 'Livraison courte distance',
+        unite: 'course',
+      },
+      {
+        nom: 'Livraison moyenne distance (1500 F)',
+        categorie: 'Livraison moyenne distance',
+        unite: 'course',
+      },
+      {
+        nom: 'Livraison longue distance (2000 F)',
+        categorie: 'Livraison longue distance',
+        unite: 'course',
+      },
     ],
   },
 ];

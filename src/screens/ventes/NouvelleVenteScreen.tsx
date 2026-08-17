@@ -174,7 +174,7 @@ export function NouvelleVenteScreen(): React.JSX.Element {
         <View style={styles.footer}>
           {config.gestionLaveurs && laveurs.length > 0 && (
             <>
-              <Text style={styles.modePaiementLabel}>Laveur (commission)</Text>
+              <Text style={styles.modePaiementLabel}>{config.libelleAgent ?? 'Laveur'} (commission)</Text>
               <View style={styles.modePaiementRow}>
                 {laveurs.map((l) => {
                   const actif = laveurId === l.id;

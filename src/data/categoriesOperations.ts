@@ -2,6 +2,7 @@ export const CATEGORIES_DEPENSES: string[] = [
   'Salaires',
   'Loyer',
   'Électricité / Eau',
+  'Carburant',
   'Transport',
   'Entretien / Réparation',
   'Autre dépense',

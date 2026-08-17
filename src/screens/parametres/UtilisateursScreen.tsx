@@ -396,14 +396,14 @@ export function UtilisateursScreen(): React.JSX.Element {
           {secteurConfig.gestionLaveurs && (
             <>
               <View style={styles.formCard}>
-                <Text style={styles.formTitle}>Nouveau laveur</Text>
+                <Text style={styles.formTitle}>Nouveau {secteurConfig.libelleAgent?.toLowerCase() ?? 'laveur'}</Text>
                 <Text style={styles.formSubtitle}>
                   Le taux de commission s'applique automatiquement à chaque vente qui lui est
                   attribuée.
                 </Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Nom du laveur"
+                  placeholder={`Nom du ${secteurConfig.libelleAgent?.toLowerCase() ?? 'laveur'}`}
                   value={nomLaveur}
                   onChangeText={setNomLaveur}
                 />
@@ -416,18 +416,20 @@ export function UtilisateursScreen(): React.JSX.Element {
                 />
                 <TouchableOpacity style={styles.createButton} onPress={handleCreerLaveur}>
                   <Ionicons name="person-add-outline" size={18} color="#FFF" />
-                  <Text style={styles.createButtonText}>Ajouter le laveur</Text>
+                  <Text style={styles.createButtonText}>
+                    Ajouter le {secteurConfig.libelleAgent?.toLowerCase() ?? 'laveur'}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               {laveurs.length > 0 && (
                 <>
-                  <Text style={styles.sectionTitle}>Laveurs</Text>
+                  <Text style={styles.sectionTitle}>{secteurConfig.libelleAgentPluriel ?? 'Laveurs'}</Text>
                   {laveurs.map((l) => (
                     <View key={l.id} style={styles.userCard}>
                       <View style={styles.userRow}>
                         <View style={styles.userAvatar}>
-                          <Ionicons name="water-outline" size={20} color={colors.primary} />
+                          <Ionicons name={secteurConfig.icone} size={20} color={colors.primary} />
                         </View>
                         <View style={styles.userInfo}>
                           <Text style={styles.userNom}>{l.nom}</Text>
