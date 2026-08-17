@@ -24,16 +24,6 @@ export async function hashPin(pin: string): Promise<string> {
   return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pin);
 }
 
-export async function ensureDefaultGerant(etablissementId: string): Promise<void> {
-  const row = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM users');
-  if (row && row.count > 0) return;
-  const pinHash = await hashPin('1234');
-  await db.runAsync(
-    'INSERT INTO users (id, etablissement_id, nom, pin_hash, role, actif, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
-    [Crypto.randomUUID(), etablissementId, 'Gérant', pinHash, 'gerant', new Date().toISOString()]
-  );
-}
-
 export async function getActiveUsers(): Promise<User[]> {
   const rows = await db.getAllAsync<UserRow>(
     'SELECT * FROM users WHERE actif = 1 ORDER BY role DESC, nom ASC'

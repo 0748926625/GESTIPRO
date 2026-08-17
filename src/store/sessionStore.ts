@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import { viderDonneesEtablissement } from '../db/client';
 import { ensureEtablissementLocal } from '../db/etablissement';
 import { importerProduitsDepuis } from '../db/importProduits';
-import { ensureDefaultGerant } from '../db/users';
 import { supabase } from '../lib/supabase';
 import { synchroniser } from '../sync';
 import type { Secteur } from '../types';
@@ -160,7 +159,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       } catch {
         // Pas de réseau : le nouvel établissement reste utilisable hors-ligne.
       }
-      await ensureDefaultGerant(nouvelId);
 
       if (sourceEtablissementIdPourImport) {
         await importerProduitsDepuis(sourceEtablissementIdPourImport, nouvelId);

@@ -5,7 +5,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { ActivityIndicator, AppState, type AppStateStatus, StyleSheet, Text, View } from 'react-native';
 import { migrate } from '../db/client';
 import { ensureEtablissementLocal } from '../db/etablissement';
-import { ensureDefaultGerant } from '../db/users';
+import { getAllUsers } from '../db/users';
 import { synchroniser } from '../sync';
 import { supabaseConfigOk } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
@@ -13,6 +13,7 @@ import { estAbonnementValide, useEtablissementStore } from '../store/etablisseme
 import { useSessionStore } from '../store/sessionStore';
 import { AbonnementExpireScreen } from '../screens/auth/AbonnementExpireScreen';
 import { ConnexionEtablissementScreen } from '../screens/auth/ConnexionEtablissementScreen';
+import { DefinirPinScreen } from '../screens/auth/DefinirPinScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { GerantTabs } from './GerantTabs';
 import { ServeurTabs } from './ServeurTabs';
@@ -31,6 +32,7 @@ export function RootNavigator(): React.JSX.Element {
   const initialiserSession = useSessionStore((s) => s.initialiser);
   const [ready, setReady] = useState(false);
   const [localPret, setLocalPret] = useState(false);
+  const [aucunUtilisateur, setAucunUtilisateur] = useState(false);
   const [erreurDemarrage, setErreurDemarrage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,8 +68,9 @@ export function RootNavigator(): React.JSX.Element {
         } catch {
           // Pas de réseau au démarrage : on continue avec les données locales existantes.
         }
-        await ensureDefaultGerant(etablissementId);
         await chargerEtablissement(etablissementId);
+        const utilisateurs = await getAllUsers();
+        setAucunUtilisateur(utilisateurs.length === 0);
         setLocalPret(true);
       } catch (e) {
         setErreurDemarrage(
@@ -133,6 +136,10 @@ export function RootNavigator(): React.JSX.Element {
           <Stack.Screen name="ConnexionEtablissement" component={ConnexionEtablissementScreen} />
         ) : !estAbonnementValide(essaiFin, abonnementActif) ? (
           <Stack.Screen name="AbonnementExpire" component={AbonnementExpireScreen} />
+        ) : aucunUtilisateur ? (
+          <Stack.Screen name="DefinirPin">
+            {() => <DefinirPinScreen onTermine={() => setAucunUtilisateur(false)} />}
+          </Stack.Screen>
         ) : !currentUser ? (
           <Stack.Screen name="Login" component={LoginScreen} />
         ) : currentUser.role === 'gerant' ? (
