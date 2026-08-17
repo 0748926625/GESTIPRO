@@ -61,18 +61,30 @@ export function OperationsScreen(): React.JSX.Element {
     }
     if (!currentUser || !etablissementId) return;
     setEnregistrement(true);
-    await creerOperation(etablissementId, {
-      type,
-      categorie,
-      montant: montantNombre,
-      description: description.trim(),
-      userId: currentUser.id,
-    });
-    setCategorie('');
-    setMontant('');
-    setDescription('');
-    setEnregistrement(false);
-    reload();
+    try {
+      await creerOperation(etablissementId, {
+        type,
+        categorie,
+        montant: montantNombre,
+        description: description.trim(),
+        userId: currentUser.id,
+      });
+      setCategorie('');
+      setMontant('');
+      setDescription('');
+      reload();
+      Alert.alert(
+        'Enregistré',
+        `${type === 'depense' ? 'Dépense' : 'Recette'} de ${montantNombre.toLocaleString('fr-FR')} F enregistrée.`
+      );
+    } catch (e) {
+      Alert.alert(
+        "Échec de l'enregistrement",
+        e instanceof Error ? e.message : "L'opération n'a pas pu être enregistrée."
+      );
+    } finally {
+      setEnregistrement(false);
+    }
   };
 
   const handleSupprimer = (operation: OperationCaisse): void => {

@@ -137,11 +137,19 @@ export function UtilisateursScreen(): React.JSX.Element {
       return;
     }
     if (!etablissementId) return;
-    await createUser(etablissementId, nom.trim(), pin, role);
-    setNom('');
-    setPin('');
-    setRole('serveur');
-    reload();
+    try {
+      await createUser(etablissementId, nom.trim(), pin, role);
+      setNom('');
+      setPin('');
+      setRole('serveur');
+      reload();
+      Alert.alert('Créé', `L'utilisateur "${nom.trim()}" a bien été créé.`);
+    } catch (e) {
+      Alert.alert(
+        "Échec de la création",
+        e instanceof Error ? e.message : "L'utilisateur n'a pas pu être créé."
+      );
+    }
   };
 
   const handleToggleActif = async (user: User): Promise<void> => {
@@ -170,10 +178,18 @@ export function UtilisateursScreen(): React.JSX.Element {
       return;
     }
     if (!etablissementId) return;
-    await createFournisseur(etablissementId, nomFournisseur.trim(), telephoneFournisseur.trim());
-    setNomFournisseur('');
-    setTelephoneFournisseur('');
-    reload();
+    try {
+      await createFournisseur(etablissementId, nomFournisseur.trim(), telephoneFournisseur.trim());
+      setNomFournisseur('');
+      setTelephoneFournisseur('');
+      reload();
+      Alert.alert('Ajouté', `Le fournisseur "${nomFournisseur.trim()}" a bien été ajouté.`);
+    } catch (e) {
+      Alert.alert(
+        "Échec de l'ajout",
+        e instanceof Error ? e.message : "Le fournisseur n'a pas pu être ajouté."
+      );
+    }
   };
 
   const handleToggleFournisseurActif = async (fournisseur: Fournisseur): Promise<void> => {
@@ -188,10 +204,19 @@ export function UtilisateursScreen(): React.JSX.Element {
       return;
     }
     if (!etablissementId) return;
-    await createLaveur(etablissementId, nomLaveur.trim(), taux);
-    setNomLaveur('');
-    setTauxCommissionLaveur('');
-    reload();
+    const libelle = secteurConfig.libelleAgent?.toLowerCase() ?? 'laveur';
+    try {
+      await createLaveur(etablissementId, nomLaveur.trim(), taux);
+      setNomLaveur('');
+      setTauxCommissionLaveur('');
+      reload();
+      Alert.alert('Ajouté', `Le ${libelle} "${nomLaveur.trim()}" a bien été ajouté.`);
+    } catch (e) {
+      Alert.alert(
+        "Échec de l'ajout",
+        e instanceof Error ? e.message : `Le ${libelle} n'a pas pu être ajouté.`
+      );
+    }
   };
 
   const handleToggleLaveurActif = async (laveur: Laveur): Promise<void> => {

@@ -48,6 +48,7 @@ export function ProduitFormScreen(): React.JSX.Element {
   const [prixVente, setPrixVente] = useState('0');
   const [prixAchatEstime, setPrixAchatEstime] = useState(false);
   const [chargement, setChargement] = useState(produitId !== undefined);
+  const [enregistrement, setEnregistrement] = useState(false);
 
   useEffect(() => {
     if (produitId === undefined) return;
@@ -88,7 +89,11 @@ export function ProduitFormScreen(): React.JSX.Element {
 
   const handleSave = async (): Promise<void> => {
     if (!nom.trim()) {
-      Alert.alert('Erreur', 'Le nom du produit est requis.');
+      Alert.alert('Erreur', `Le nom du ${config.libelleArticle} est requis.`);
+      return;
+    }
+    if (!categorie.trim()) {
+      Alert.alert('Erreur', 'La catégorie est requise.');
       return;
     }
     const input = {
@@ -99,16 +104,30 @@ export function ProduitFormScreen(): React.JSX.Element {
       prixAchat: Number(prixAchat) || 0,
       prixVente: Number(prixVente) || 0,
     };
-    if (produitId !== undefined) {
-      await updateProduit(produitId, input);
-    } else {
-      if (!etablissementId) return;
-      await createProduit(etablissementId, {
-        ...input,
-        quantiteStockInitiale: config.stockActif ? undefined : QUANTITE_ILLIMITEE,
-      });
+    setEnregistrement(true);
+    try {
+      if (produitId !== undefined) {
+        await updateProduit(produitId, input);
+      } else {
+        if (!etablissementId) return;
+        await createProduit(etablissementId, {
+          ...input,
+          quantiteStockInitiale: config.stockActif ? undefined : QUANTITE_ILLIMITEE,
+        });
+      }
+      Alert.alert(
+        produitId !== undefined ? 'Modifié' : 'Créé',
+        `Le ${config.libelleArticle} "${input.nom}" a bien été ${produitId !== undefined ? 'modifié' : 'créé'}.`
+      );
+      navigation.goBack();
+    } catch (e) {
+      Alert.alert(
+        'Échec de l\'enregistrement',
+        e instanceof Error ? e.message : `Le ${config.libelleArticle} n'a pas pu être enregistré.`
+      );
+    } finally {
+      setEnregistrement(false);
     }
-    navigation.goBack();
   };
 
   const handleDesactiver = (): void => {
@@ -238,9 +257,11 @@ export function ProduitFormScreen(): React.JSX.Element {
           keyboardType="numeric"
         />
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={enregistrement}>
           <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" />
-          <Text style={styles.saveButtonText}>Enregistrer</Text>
+          <Text style={styles.saveButtonText}>
+            {enregistrement ? 'Enregistrement...' : 'Enregistrer'}
+          </Text>
         </TouchableOpacity>
 
         {produitId !== undefined && (

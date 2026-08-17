@@ -43,19 +43,28 @@ export function MouvementStockScreen(): React.JSX.Element {
     }
     if (!currentUser || !etablissementId) return;
     setEnCours(true);
-    const alerte = await enregistrerMouvementStock(
-      etablissementId,
-      produitId,
-      'entree',
-      qte,
-      motif.trim() || 'Livraison',
-      currentUser.id
-    );
-    setEnCours(false);
-    if (alerte) {
-      declencherAlerteStock(alerte);
+    try {
+      const alerte = await enregistrerMouvementStock(
+        etablissementId,
+        produitId,
+        'entree',
+        qte,
+        motif.trim() || 'Livraison',
+        currentUser.id
+      );
+      Alert.alert('Enregistré', `Entrée de ${qte} ${nomProduit} enregistrée.`);
+      if (alerte) {
+        declencherAlerteStock(alerte);
+      }
+      navigation.goBack();
+    } catch (e) {
+      Alert.alert(
+        "Échec de l'enregistrement",
+        e instanceof Error ? e.message : "Le mouvement de stock n'a pas pu être enregistré."
+      );
+    } finally {
+      setEnCours(false);
     }
-    navigation.goBack();
   };
 
   return (

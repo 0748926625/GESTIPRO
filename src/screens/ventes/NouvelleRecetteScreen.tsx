@@ -45,16 +45,24 @@ export function NouvelleRecetteScreen(): React.JSX.Element {
     }
     if (!currentUser || !etablissementId) return;
     setEnCours(true);
-    await creerOperation(etablissementId, {
-      type: 'recette',
-      categorie,
-      montant: montantNombre,
-      description: description.trim(),
-      userId: currentUser.id,
-    });
-    setEnCours(false);
-    Alert.alert('Enregistré', `Recette de ${montantNombre.toLocaleString('fr-FR')} F ajoutée.`);
-    navigation.goBack();
+    try {
+      await creerOperation(etablissementId, {
+        type: 'recette',
+        categorie,
+        montant: montantNombre,
+        description: description.trim(),
+        userId: currentUser.id,
+      });
+      Alert.alert('Enregistré', `Recette de ${montantNombre.toLocaleString('fr-FR')} F ajoutée.`);
+      navigation.goBack();
+    } catch (e) {
+      Alert.alert(
+        "Échec de l'enregistrement",
+        e instanceof Error ? e.message : "La recette n'a pas pu être enregistrée."
+      );
+    } finally {
+      setEnCours(false);
+    }
   };
 
   return (
