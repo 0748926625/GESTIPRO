@@ -1,5 +1,6 @@
 import { db, getMeta, setMeta } from '../db/client';
 import { supabase } from '../lib/supabase';
+import { useSyncErrorStore } from '../store/syncErrorStore';
 import { useSyncSignalStore } from '../store/syncSignalStore';
 
 interface TableSyncConfig {
@@ -126,15 +127,21 @@ export async function synchroniser(etablissementId: string): Promise<void> {
   const depuisDernierEnvoi = await getMeta('last_push_at');
   await synchroniserEtablissement(etablissementId);
   // Chaque table est isolée : un problème sur l'une (ex: policy RLS mal configurée sur une
-  // table récente) ne doit jamais empêcher la synchro des autres tables (ex: le stock).
+  // table récente) ne doit jamais empêcher la synchro des autres tables (ex: le stock). Les
+  // erreurs sont quand même collectées pour être remontées à la fin : les avaler entièrement
+  // rendait les pannes de synchro invisibles, y compris sur le bouton "Synchroniser maintenant".
+  const erreurs: string[] = [];
   for (const table of TABLES) {
-    await tirerTable(table, etablissementId).catch(() => {});
+    await tirerTable(table, etablissementId).catch((e) => {
+      erreurs.push(e instanceof Error ? e.message : String(e));
+    });
   }
   const maintenant = new Date().toISOString();
   let envoiReussi = true;
   for (const table of TABLES) {
-    await pousserTable(table, depuisDernierEnvoi).catch(() => {
+    await pousserTable(table, depuisDernierEnvoi).catch((e) => {
       envoiReussi = false;
+      erreurs.push(e instanceof Error ? e.message : String(e));
     });
   }
   // Le repère "dernier envoi" n'avance que si tout est parti : sinon, une ligne dont l'envoi a
@@ -147,6 +154,13 @@ export async function synchroniser(etablissementId: string): Promise<void> {
   // que des données ont potentiellement changé, pour qu'ils se mettent à jour sans qu'il soit
   // nécessaire de quitter puis revenir sur l'écran.
   useSyncSignalStore.getState().bump();
+
+  if (erreurs.length > 0) {
+    const message = erreurs.join(' | ');
+    useSyncErrorStore.getState().set(message);
+    throw new Error(message);
+  }
+  useSyncErrorStore.getState().set(null);
 }
 
 export async function getDerniereSynchro(): Promise<string | null> {

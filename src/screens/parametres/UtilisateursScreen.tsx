@@ -33,6 +33,7 @@ import { useEtablissementStore } from '../../store/etablissementStore';
 import { useRealtimeStatusStore } from '../../store/realtimeStatusStore';
 import type { StatutTempsReel } from '../../store/realtimeStatusStore';
 import { useSessionStore } from '../../store/sessionStore';
+import { useSyncErrorStore } from '../../store/syncErrorStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Fournisseur, Laveur, Role, User } from '../../types';
 
@@ -95,6 +96,7 @@ export function UtilisateursScreen(): React.JSX.Element {
   const statutTempsReel = useRealtimeStatusStore((s) => s.statut);
   const dernierEvenementTempsReel = useRealtimeStatusStore((s) => s.dernierEvenement);
   const erreurTempsReel = useRealtimeStatusStore((s) => s.derniereErreur);
+  const derniereErreurSync = useSyncErrorStore((s) => s.derniereErreur);
 
   const reload = useCallback(() => {
     getAllUsers().then(setUsers);
@@ -289,6 +291,18 @@ export function UtilisateursScreen(): React.JSX.Element {
               <Ionicons name="refresh-outline" size={20} color={colors.primary} />
             )}
           </TouchableOpacity>
+
+          {derniereErreurSync && (
+            <View style={[styles.syncCard, { borderColor: colors.danger }]}>
+              <View style={styles.syncCardLeft}>
+                <Ionicons name="warning-outline" size={20} color={colors.danger} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.syncCardTitle}>Dernière erreur de synchro</Text>
+                  <Text style={styles.syncCardSubtitle}>{derniereErreurSync}</Text>
+                </View>
+              </View>
+            </View>
+          )}
 
           <View style={[styles.syncCard, { borderColor: COULEURS_TEMPS_REEL[statutTempsReel] }]}>
             <View style={styles.syncCardLeft}>
