@@ -1,5 +1,6 @@
 import { db, getMeta, setMeta } from '../db/client';
 import { supabase } from '../lib/supabase';
+import { useSyncSignalStore } from '../store/syncSignalStore';
 
 interface TableSyncConfig {
   nom: string;
@@ -142,6 +143,10 @@ export async function synchroniser(etablissementId: string): Promise<void> {
     await setMeta('last_push_at', maintenant);
   }
   await setMeta('last_sync_at', maintenant);
+  // Signale aux écrans déjà affichés (qui ne se rafraîchissent normalement qu'à la navigation)
+  // que des données ont potentiellement changé, pour qu'ils se mettent à jour sans qu'il soit
+  // nécessaire de quitter puis revenir sur l'écran.
+  useSyncSignalStore.getState().bump();
 }
 
 export async function getDerniereSynchro(): Promise<string | null> {

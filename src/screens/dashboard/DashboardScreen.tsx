@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import { getProduitsStockBas } from '../../db/produits';
 import { getChiffreAffaires, getNombreVentes } from '../../db/rapports';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
+import { useSyncSignalStore } from '../../store/syncSignalStore';
 import { colors, spacing } from '../../theme';
 import type { Produit } from '../../types';
 
@@ -28,18 +29,20 @@ export function DashboardScreen(): React.JSX.Element {
   const [nombreVentes, setNombreVentes] = useState(0);
   const [produitsAlerte, setProduitsAlerte] = useState<Produit[]>([]);
   const [notificationsNonLues, setNotificationsNonLues] = useState(0);
+  const syncVersion = useSyncSignalStore((s) => s.version);
 
-  useFocusEffect(
-    useCallback(() => {
-      const debutJour = startOfDay(new Date()).toISOString();
-      getChiffreAffaires(debutJour).then(setChiffreAffaires);
-      getNombreVentes(debutJour).then(setNombreVentes);
-      getNombreNotificationsNonLues().then(setNotificationsNonLues);
-      if (config.stockActif) {
-        getProduitsStockBas().then(setProduitsAlerte);
-      }
-    }, [config.stockActif])
-  );
+  const reload = useCallback(() => {
+    const debutJour = startOfDay(new Date()).toISOString();
+    getChiffreAffaires(debutJour).then(setChiffreAffaires);
+    getNombreVentes(debutJour).then(setNombreVentes);
+    getNombreNotificationsNonLues().then(setNotificationsNonLues);
+    if (config.stockActif) {
+      getProduitsStockBas().then(setProduitsAlerte);
+    }
+  }, [config.stockActif]);
+
+  useFocusEffect(useCallback(reload, [reload]));
+  useEffect(reload, [syncVersion, reload]);
 
   return (
     <SafeAreaView style={styles.container}>

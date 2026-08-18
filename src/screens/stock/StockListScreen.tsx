@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { getProduits } from '../../db/produits';
 import type { StockStackParamList } from '../../navigation/StockStack';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
+import { useSyncSignalStore } from '../../store/syncSignalStore';
 import { colors, spacing } from '../../theme';
 import type { Produit } from '../../types';
 
@@ -23,12 +24,16 @@ export function StockListScreen(): React.JSX.Element {
   const config = getSecteurConfig(secteur);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [recherche, setRecherche] = useState('');
+  const syncVersion = useSyncSignalStore((s) => s.version);
 
   const reload = useCallback(() => {
     getProduits().then(setProduits);
   }, []);
 
   useFocusEffect(reload);
+  // Se rafraîchit aussi quand une synchro (temps réel ou classique) vient de se terminer,
+  // même si cet écran est déjà affiché sans navigation entre-temps.
+  useEffect(reload, [syncVersion, reload]);
 
   const produitsFiltres = produits.filter((p) =>
     p.nom.toLowerCase().includes(recherche.toLowerCase())

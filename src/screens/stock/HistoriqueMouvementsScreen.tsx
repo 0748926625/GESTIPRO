@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHeader } from '../../components/BackHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { getMouvementsStock } from '../../db/produits';
+import { useSyncSignalStore } from '../../store/syncSignalStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { MouvementStockDetail, TypeMouvement } from '../../types';
 
@@ -38,12 +39,14 @@ const LABELS: Record<TypeMouvement, string> = {
 export function HistoriqueMouvementsScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const [mouvements, setMouvements] = useState<MouvementStockDetail[]>([]);
+  const syncVersion = useSyncSignalStore((s) => s.version);
 
-  useFocusEffect(
-    useCallback(() => {
-      getMouvementsStock(200).then(setMouvements);
-    }, [])
-  );
+  const reload = useCallback(() => {
+    getMouvementsStock(200).then(setMouvements);
+  }, []);
+
+  useFocusEffect(reload);
+  useEffect(reload, [syncVersion, reload]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

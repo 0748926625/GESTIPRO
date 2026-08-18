@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHeader } from '../../components/BackHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { getNotifications, marquerNotificationsLues } from '../../db/notifications';
+import { useSyncSignalStore } from '../../store/syncSignalStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Notification, TypeNotification } from '../../types';
 
@@ -32,13 +33,15 @@ const FONDS: Record<TypeNotification, string> = {
 export function NotificationsScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const syncVersion = useSyncSignalStore((s) => s.version);
 
-  useFocusEffect(
-    useCallback(() => {
-      getNotifications().then(setNotifications);
-      marquerNotificationsLues();
-    }, [])
-  );
+  const reload = useCallback(() => {
+    getNotifications().then(setNotifications);
+    marquerNotificationsLues();
+  }, []);
+
+  useFocusEffect(reload);
+  useEffect(reload, [syncVersion, reload]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

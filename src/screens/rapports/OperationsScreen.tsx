@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -23,6 +23,7 @@ import { creerNotification } from '../../db/notifications';
 import { creerOperation, getOperations, supprimerOperation } from '../../db/operations';
 import { useAuthStore } from '../../store/authStore';
 import { useSessionStore } from '../../store/sessionStore';
+import { useSyncSignalStore } from '../../store/syncSignalStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { OperationCaisse, TypeOperation } from '../../types';
 
@@ -37,12 +38,14 @@ export function OperationsScreen(): React.JSX.Element {
   const [montant, setMontant] = useState('');
   const [description, setDescription] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
+  const syncVersion = useSyncSignalStore((s) => s.version);
 
   const reload = useCallback(() => {
     getOperations().then(setOperations);
   }, []);
 
   useFocusEffect(reload);
+  useEffect(reload, [syncVersion, reload]);
 
   const options = type === 'depense' ? CATEGORIES_DEPENSES : CATEGORIES_RECETTES;
 
