@@ -23,8 +23,18 @@ const TABLES: TableSyncConfig[] = [
   { nom: 'fournisseurs', champsBooleens: ['actif'] },
 ];
 
-async function pousserTable(config: TableSyncConfig): Promise<void> {
-  const rows = await db.getAllAsync<Record<string, unknown>>(`SELECT * FROM ${config.nom}`);
+async function pousserTable(config: TableSyncConfig, depuisISO: string | null): Promise<void> {
+  // Ne repousse que ce qui a été modifié localement depuis le dernier envoi réussi : un envoi
+  // aveugle de toutes les lignes à chaque cycle permettait à un appareil resté en retard de
+  // republier sa copie périmée d'une ligne et de "gagner" la course simplement parce qu'il
+  // synchronisait plus tard dans le temps réel (le trigger Postgres republie updated_at à
+  // now() sur toute écriture, même une donnée obsolète) — ce qui faisait reculer le stock.
+  const rows = depuisISO
+    ? await db.getAllAsync<Record<string, unknown>>(
+        `SELECT * FROM ${config.nom} WHERE updated_at > ?`,
+        [depuisISO]
+      )
+    : await db.getAllAsync<Record<string, unknown>>(`SELECT * FROM ${config.nom}`);
   if (rows.length === 0) return;
 
   const rowsConverties = rows.map((r) => {
@@ -112,16 +122,26 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
 }
 
 export async function synchroniser(etablissementId: string): Promise<void> {
+  const depuisDernierEnvoi = await getMeta('last_push_at');
   await synchroniserEtablissement(etablissementId);
   // Chaque table est isolée : un problème sur l'une (ex: policy RLS mal configurée sur une
   // table récente) ne doit jamais empêcher la synchro des autres tables (ex: le stock).
   for (const table of TABLES) {
     await tirerTable(table, etablissementId).catch(() => {});
   }
+  const maintenant = new Date().toISOString();
+  let envoiReussi = true;
   for (const table of TABLES) {
-    await pousserTable(table).catch(() => {});
+    await pousserTable(table, depuisDernierEnvoi).catch(() => {
+      envoiReussi = false;
+    });
   }
-  await setMeta('last_sync_at', new Date().toISOString());
+  // Le repère "dernier envoi" n'avance que si tout est parti : sinon, une ligne dont l'envoi a
+  // échoué serait considérée comme déjà envoyée au prochain cycle et ne serait jamais réessayée.
+  if (envoiReussi) {
+    await setMeta('last_push_at', maintenant);
+  }
+  await setMeta('last_sync_at', maintenant);
 }
 
 export async function getDerniereSynchro(): Promise<string | null> {
