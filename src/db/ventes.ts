@@ -133,13 +133,26 @@ async function chargerVenteAvecLignes(v: VenteRow): Promise<VenteAvecLignes> {
   };
 }
 
-export async function getHistoriqueVentes(limit = 100, depuisISO?: string): Promise<VenteAvecLignes[]> {
-  const ventes = depuisISO
-    ? await db.getAllAsync<VenteRow>(
-        'SELECT * FROM ventes WHERE date >= ? ORDER BY date DESC LIMIT ?',
-        [depuisISO, limit]
-      )
-    : await db.getAllAsync<VenteRow>('SELECT * FROM ventes ORDER BY date DESC LIMIT ?', [limit]);
+export async function getHistoriqueVentes(
+  limit = 100,
+  depuisISO?: string,
+  jusquISO?: string
+): Promise<VenteAvecLignes[]> {
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+  if (depuisISO) {
+    conditions.push('date >= ?');
+    params.push(depuisISO);
+  }
+  if (jusquISO) {
+    conditions.push('date <= ?');
+    params.push(jusquISO);
+  }
+  const clauseOu = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const ventes = await db.getAllAsync<VenteRow>(
+    `SELECT * FROM ventes ${clauseOu} ORDER BY date DESC LIMIT ?`,
+    [...params, limit]
+  );
   const result: VenteAvecLignes[] = [];
   for (const v of ventes) {
     result.push(await chargerVenteAvecLignes(v));
