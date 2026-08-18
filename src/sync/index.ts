@@ -139,7 +139,34 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
   }
 }
 
-export async function synchroniser(etablissementId: string): Promise<void> {
+// Une seule synchro à la fois, globalement : avec la synchro temps réel, une action sur un
+// appareil peut déclencher un évènement reçu par tous les appareils connectés (y compris
+// soi-même), qui déclenchent chacun leur propre resynchro. Sans verrou, plusieurs cycles
+// pull/push pouvaient s'exécuter en parallèle et s'entrelacer (chacun lisant/écrivant le
+// repère "dernier envoi" à des moments différents), ce qui pouvait à la fois faire "geler"
+// des appels réseau en attente et faire passer une modification entre deux cycles sans
+// qu'aucun des deux ne l'envoie vraiment. Une synchro déjà en cours est réutilisée telle
+// quelle ; une demande arrivée pendant qu'elle tourne déclenche une seule resynchro juste
+// après, pour ne jamais perdre un changement fait pendant ce laps de temps.
+let synchroEnCours: Promise<void> | null = null;
+let resynchroDemandee = false;
+
+export function synchroniser(etablissementId: string): Promise<void> {
+  if (synchroEnCours) {
+    resynchroDemandee = true;
+    return synchroEnCours;
+  }
+  synchroEnCours = executerSynchro(etablissementId).finally(() => {
+    synchroEnCours = null;
+    if (resynchroDemandee) {
+      resynchroDemandee = false;
+      synchroniser(etablissementId).catch(() => {});
+    }
+  });
+  return synchroEnCours;
+}
+
+async function executerSynchro(etablissementId: string): Promise<void> {
   const depuisDernierEnvoi = await getMeta('last_push_at');
   // Chaque table est isolée : un problème sur l'une (ex: policy RLS mal configurée sur une
   // table récente, ou un réseau qui traîne) ne doit jamais empêcher la synchro des autres

@@ -19,7 +19,7 @@ const TABLES_TEMPS_REEL = [
   'fournisseurs',
 ];
 
-const DELAI_DEBOUNCE_MS = 800;
+const DELAI_DEBOUNCE_MS = 2000;
 
 export function demarrerEcouteTempsReel(etablissementId: string): () => void {
   let minuteur: ReturnType<typeof setTimeout> | null = null;
