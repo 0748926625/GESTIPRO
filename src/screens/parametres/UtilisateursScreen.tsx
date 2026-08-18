@@ -126,16 +126,20 @@ export function UtilisateursScreen(): React.JSX.Element {
   };
 
   const handleDiagnostiquer = async (): Promise<void> => {
-    const d = await diagnostiquerSyncProduits();
-    Alert.alert(
-      'Diagnostic stock',
-      [
-        `Dernier envoi réussi : ${d.dernierEnvoi ?? 'jamais'}`,
-        `Produit le plus récent (local) : ${d.produitsMaxUpdatedAt ?? 'aucun'}`,
-        `Produits enregistrés en local : ${d.produitsNombreTotal}`,
-        `Produits qui seraient envoyés au prochain sync : ${d.produitsAPousser}`,
-      ].join('\n')
-    );
+    try {
+      const d = await diagnostiquerSyncProduits();
+      Alert.alert(
+        'Diagnostic stock',
+        [
+          `Dernier envoi réussi : ${d.dernierEnvoi ?? 'jamais'}`,
+          `Produit le plus récent (local) : ${d.produitsMaxUpdatedAt ?? 'aucun'}`,
+          `Produits enregistrés en local : ${d.produitsNombreTotal}`,
+          `Produits qui seraient envoyés au prochain sync : ${d.produitsAPousser}`,
+        ].join('\n')
+      );
+    } catch (e) {
+      Alert.alert('Diagnostic échoué', e instanceof Error ? e.message : String(e));
+    }
   };
 
   const handleChoisirLogo = async (): Promise<void> => {
