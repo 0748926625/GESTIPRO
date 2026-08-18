@@ -28,6 +28,7 @@ import { createLaveur, getLaveurs, setLaveurActif } from '../../db/laveurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
 import { getDerniereSynchro, synchroniser } from '../../sync';
 import { diagnostiquerSyncProduits } from '../../sync/debug';
+import { avecTimeout } from '../../utils/timeout';
 import type { ParametresStackParamList } from '../../navigation/ParametresStack';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
@@ -127,7 +128,7 @@ export function UtilisateursScreen(): React.JSX.Element {
 
   const handleDiagnostiquer = async (): Promise<void> => {
     try {
-      const d = await diagnostiquerSyncProduits();
+      const d = await avecTimeout(diagnostiquerSyncProduits(), 8000, 'Diagnostic');
       Alert.alert(
         'Diagnostic stock',
         [

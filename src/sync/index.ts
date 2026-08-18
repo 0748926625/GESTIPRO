@@ -2,6 +2,9 @@ import { db, getMeta, setMeta } from '../db/client';
 import { supabase } from '../lib/supabase';
 import { useSyncErrorStore } from '../store/syncErrorStore';
 import { useSyncSignalStore } from '../store/syncSignalStore';
+import { avecTimeout } from '../utils/timeout';
+
+const DELAI_RESEAU_MS = 15000;
 
 interface TableSyncConfig {
   nom: string;
@@ -50,15 +53,20 @@ async function pousserTable(config: TableSyncConfig, depuisISO: string | null): 
     return copie;
   });
 
-  const { error } = await supabase.from(config.nom).upsert(rowsConverties, { onConflict: 'id' });
+  const { error } = await avecTimeout(
+    supabase.from(config.nom).upsert(rowsConverties, { onConflict: 'id' }),
+    DELAI_RESEAU_MS,
+    `Envoi ${config.nom}`
+  );
   if (error) throw new Error(`Envoi ${config.nom} : ${error.message}`);
 }
 
 async function tirerTable(config: TableSyncConfig, etablissementId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from(config.nom)
-    .select('*')
-    .eq('etablissement_id', etablissementId);
+  const { data, error } = await avecTimeout(
+    supabase.from(config.nom).select('*').eq('etablissement_id', etablissementId),
+    DELAI_RESEAU_MS,
+    `Réception ${config.nom}`
+  );
   if (error) throw new Error(`Réception ${config.nom} : ${error.message}`);
   if (!data || data.length === 0) return;
 
@@ -92,11 +100,15 @@ async function tirerTable(config: TableSyncConfig, etablissementId: string): Pro
 }
 
 async function synchroniserEtablissement(etablissementId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('etablissements')
-    .select('nom, secteur, essai_fin, abonnement_actif, updated_at')
-    .eq('id', etablissementId)
-    .maybeSingle();
+  const { data, error } = await avecTimeout(
+    supabase
+      .from('etablissements')
+      .select('nom, secteur, essai_fin, abonnement_actif, updated_at')
+      .eq('id', etablissementId)
+      .maybeSingle(),
+    DELAI_RESEAU_MS,
+    'Réception etablissement'
+  );
   if (error || !data) return;
 
   const local = await db.getFirstAsync<{ nom: string; secteur: string; updated_at: string }>(
@@ -119,18 +131,24 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
       etablissementId,
     ]);
   } else if (data.nom !== local.nom) {
-    await supabase.from('etablissements').update({ nom: local.nom }).eq('id', etablissementId);
+    await avecTimeout(
+      supabase.from('etablissements').update({ nom: local.nom }).eq('id', etablissementId),
+      DELAI_RESEAU_MS,
+      'Envoi etablissement'
+    );
   }
 }
 
 export async function synchroniser(etablissementId: string): Promise<void> {
   const depuisDernierEnvoi = await getMeta('last_push_at');
-  await synchroniserEtablissement(etablissementId);
   // Chaque table est isolée : un problème sur l'une (ex: policy RLS mal configurée sur une
-  // table récente) ne doit jamais empêcher la synchro des autres tables (ex: le stock). Les
-  // erreurs sont quand même collectées pour être remontées à la fin : les avaler entièrement
-  // rendait les pannes de synchro invisibles, y compris sur le bouton "Synchroniser maintenant".
+  // table récente, ou un réseau qui traîne) ne doit jamais empêcher la synchro des autres
+  // tables (ex: le stock). Les erreurs sont quand même collectées pour être remontées à la
+  // fin : les avaler entièrement rendait les pannes de synchro invisibles.
   const erreurs: string[] = [];
+  await synchroniserEtablissement(etablissementId).catch((e) => {
+    erreurs.push(e instanceof Error ? e.message : String(e));
+  });
   for (const table of TABLES) {
     await tirerTable(table, etablissementId).catch((e) => {
       erreurs.push(e instanceof Error ? e.message : String(e));
