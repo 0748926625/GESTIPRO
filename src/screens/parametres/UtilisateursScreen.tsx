@@ -30,11 +30,29 @@ import { getDerniereSynchro, synchroniser } from '../../sync';
 import type { ParametresStackParamList } from '../../navigation/ParametresStack';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
+import { useRealtimeStatusStore } from '../../store/realtimeStatusStore';
+import type { StatutTempsReel } from '../../store/realtimeStatusStore';
 import { useSessionStore } from '../../store/sessionStore';
 import { cardShadow, colors, spacing } from '../../theme';
 import type { Fournisseur, Laveur, Role, User } from '../../types';
 
 type Nav = NativeStackNavigationProp<ParametresStackParamList, 'ParametresHome'>;
+
+const LABELS_TEMPS_REEL: Record<StatutTempsReel, string> = {
+  inactif: 'inactif',
+  connexion: 'connexion...',
+  connecte: 'connecté',
+  erreur: 'erreur',
+  ferme: 'fermé',
+};
+
+const COULEURS_TEMPS_REEL: Record<StatutTempsReel, string> = {
+  inactif: colors.textMuted,
+  connexion: colors.accentJaune,
+  connecte: colors.success,
+  erreur: colors.danger,
+  ferme: colors.danger,
+};
 
 async function copierLogoLocalement(sourceUri: string): Promise<string> {
   if (Platform.OS === 'web') return sourceUri;
@@ -74,6 +92,9 @@ export function UtilisateursScreen(): React.JSX.Element {
   const [pinModifie, setPinModifie] = useState('');
   const [syncEnCours, setSyncEnCours] = useState(false);
   const [derniereSynchro, setDerniereSynchro] = useState<string | null>(null);
+  const statutTempsReel = useRealtimeStatusStore((s) => s.statut);
+  const dernierEvenementTempsReel = useRealtimeStatusStore((s) => s.dernierEvenement);
+  const erreurTempsReel = useRealtimeStatusStore((s) => s.derniereErreur);
 
   const reload = useCallback(() => {
     getAllUsers().then(setUsers);
@@ -268,6 +289,26 @@ export function UtilisateursScreen(): React.JSX.Element {
               <Ionicons name="refresh-outline" size={20} color={colors.primary} />
             )}
           </TouchableOpacity>
+
+          <View style={[styles.syncCard, { borderColor: COULEURS_TEMPS_REEL[statutTempsReel] }]}>
+            <View style={styles.syncCardLeft}>
+              <Ionicons
+                name={statutTempsReel === 'connecte' ? 'flash' : 'flash-outline'}
+                size={20}
+                color={COULEURS_TEMPS_REEL[statutTempsReel]}
+              />
+              <View>
+                <Text style={styles.syncCardTitle}>Temps réel : {LABELS_TEMPS_REEL[statutTempsReel]}</Text>
+                <Text style={styles.syncCardSubtitle}>
+                  {statutTempsReel === 'erreur' && erreurTempsReel
+                    ? erreurTempsReel
+                    : dernierEvenementTempsReel
+                      ? `Dernier évènement reçu : ${format(new Date(dernierEvenementTempsReel), 'dd MMM yyyy, HH:mm:ss', { locale: fr })}`
+                      : 'Aucun évènement reçu pour l\'instant'}
+                </Text>
+              </View>
+            </View>
+          </View>
 
           <TouchableOpacity
             style={styles.syncCard}

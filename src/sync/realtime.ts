@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { useRealtimeStatusStore } from '../store/realtimeStatusStore';
 import { synchroniser } from './index';
 
 // Tables métier écoutées en temps réel : dès qu'une ligne change côté serveur (peu importe
@@ -27,12 +28,14 @@ export function demarrerEcouteTempsReel(etablissementId: string): () => void {
   // stock touche produits + mouvements_stock + notifications) : on regroupe ces évènements
   // rapprochés en un seul cycle de synchro au lieu d'en déclencher un par table.
   const resynchroniserBientot = (): void => {
+    useRealtimeStatusStore.getState().noterEvenement();
     if (minuteur) clearTimeout(minuteur);
     minuteur = setTimeout(() => {
       synchroniser(etablissementId).catch(() => {});
     }, DELAI_DEBOUNCE_MS);
   };
 
+  useRealtimeStatusStore.getState().set('connexion');
   const canal = supabase.channel(`realtime-${etablissementId}`);
   for (const table of TABLES_TEMPS_REEL) {
     canal.on(
@@ -46,10 +49,19 @@ export function demarrerEcouteTempsReel(etablissementId: string): () => void {
       resynchroniserBientot
     );
   }
-  canal.subscribe();
+  canal.subscribe((statut, err) => {
+    if (statut === 'SUBSCRIBED') {
+      useRealtimeStatusStore.getState().set('connecte');
+    } else if (statut === 'CHANNEL_ERROR' || statut === 'TIMED_OUT') {
+      useRealtimeStatusStore.getState().set('erreur', err?.message ?? statut);
+    } else if (statut === 'CLOSED') {
+      useRealtimeStatusStore.getState().set('ferme');
+    }
+  });
 
   return () => {
     if (minuteur) clearTimeout(minuteur);
     supabase.removeChannel(canal);
+    useRealtimeStatusStore.getState().set('inactif');
   };
 }
