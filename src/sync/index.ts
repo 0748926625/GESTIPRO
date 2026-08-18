@@ -113,11 +113,13 @@ async function synchroniserEtablissement(etablissementId: string): Promise<void>
 
 export async function synchroniser(etablissementId: string): Promise<void> {
   await synchroniserEtablissement(etablissementId);
+  // Chaque table est isolée : un problème sur l'une (ex: policy RLS mal configurée sur une
+  // table récente) ne doit jamais empêcher la synchro des autres tables (ex: le stock).
   for (const table of TABLES) {
-    await tirerTable(table, etablissementId);
+    await tirerTable(table, etablissementId).catch(() => {});
   }
   for (const table of TABLES) {
-    await pousserTable(table);
+    await pousserTable(table).catch(() => {});
   }
   await setMeta('last_sync_at', new Date().toISOString());
 }

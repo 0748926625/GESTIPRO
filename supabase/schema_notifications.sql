@@ -19,8 +19,8 @@ alter table gestipro.notifications enable row level security;
 
 drop policy if exists "notifications_etablissement" on gestipro.notifications;
 create policy "notifications_etablissement" on gestipro.notifications for all
-  using (etablissement_id = (select etablissement_id from gestipro.profils where id = auth.uid()))
-  with check (etablissement_id = (select etablissement_id from gestipro.profils where id = auth.uid()));
+  using (etablissement_id in (select etablissement_id from gestipro.memberships where user_id = auth.uid()))
+  with check (etablissement_id in (select etablissement_id from gestipro.memberships where user_id = auth.uid()));
 
 drop trigger if exists trg_notifications_updated_at on gestipro.notifications;
 create trigger trg_notifications_updated_at before update on gestipro.notifications
