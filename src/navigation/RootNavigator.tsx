@@ -7,6 +7,7 @@ import { migrate } from '../db/client';
 import { ensureEtablissementLocal } from '../db/etablissement';
 import { getAllUsers } from '../db/users';
 import { synchroniser } from '../sync';
+import { demarrerEcouteTempsReel } from '../sync/realtime';
 import { supabaseConfigOk } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { estAbonnementValide, useEtablissementStore } from '../store/etablissementStore';
@@ -88,6 +89,12 @@ export function RootNavigator(): React.JSX.Element {
       }
     });
     return desabonner;
+  }, [etablissementId, localPret]);
+
+  useEffect(() => {
+    if (!etablissementId || !localPret) return;
+    const arreterEcoute = demarrerEcouteTempsReel(etablissementId);
+    return arreterEcoute;
   }, [etablissementId, localPret]);
 
   useEffect(() => {
