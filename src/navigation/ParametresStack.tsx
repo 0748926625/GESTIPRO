@@ -2,11 +2,13 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { EtablissementsScreen } from '../screens/parametres/EtablissementsScreen';
 import { UtilisateursScreen } from '../screens/parametres/UtilisateursScreen';
+import { AideScreen } from '../screens/aide/AideScreen';
 import { colors } from '../theme';
 
 export type ParametresStackParamList = {
   ParametresHome: undefined;
   Etablissements: undefined;
+  Aide: undefined;
 };
 
 const Stack = createNativeStackNavigator<ParametresStackParamList>();
@@ -22,6 +24,7 @@ export function ParametresStack(): React.JSX.Element {
     >
       <Stack.Screen name="ParametresHome" component={UtilisateursScreen} />
       <Stack.Screen name="Etablissements" component={EtablissementsScreen} />
+      <Stack.Screen name="Aide" component={AideScreen} />
     </Stack.Navigator>
   );
 }

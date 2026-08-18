@@ -371,6 +371,17 @@ export function UtilisateursScreen(): React.JSX.Element {
             <Ionicons name="chevron-forward" size={20} color={colors.primary} />
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.syncCard} onPress={() => navigation.navigate('Aide')}>
+            <View style={styles.syncCardLeft}>
+              <Ionicons name="help-buoy-outline" size={20} color={colors.primary} />
+              <View>
+                <Text style={styles.syncCardTitle}>Aide</Text>
+                <Text style={styles.syncCardSubtitle}>Guide de démarrage rapide</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+          </TouchableOpacity>
+
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Établissement</Text>
             <View style={styles.secteurBadge}>
