@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { db } from './client';
-import type { AlerteStock, Produit, TypeMouvement } from '../types';
+import type { AlerteStock, MouvementStockDetail, Produit, TypeMouvement } from '../types';
 
 interface ProduitRow {
   id: string;
@@ -141,4 +141,37 @@ export async function enregistrerMouvementStock(
     }
   });
   return alerte;
+}
+
+interface MouvementRow {
+  id: string;
+  produit_id: string;
+  type: TypeMouvement;
+  quantite: number;
+  motif: string;
+  user_id: string;
+  date: string;
+  nom_produit: string;
+  nom_user: string;
+}
+
+export async function getMouvementsStock(limit = 100): Promise<MouvementStockDetail[]> {
+  const rows = await db.getAllAsync<MouvementRow>(
+    `SELECT m.*, p.nom as nom_produit, u.nom as nom_user FROM mouvements_stock m
+     JOIN produits p ON p.id = m.produit_id
+     JOIN users u ON u.id = m.user_id
+     ORDER BY m.date DESC LIMIT ?`,
+    [limit]
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    produitId: row.produit_id,
+    type: row.type,
+    quantite: row.quantite,
+    motif: row.motif,
+    userId: row.user_id,
+    date: row.date,
+    nomProduit: row.nom_produit,
+    nomUser: row.nom_user,
+  }));
 }

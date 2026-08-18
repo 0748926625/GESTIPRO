@@ -47,6 +47,14 @@ export function StockListScreen(): React.JSX.Element {
             onChangeText={setRecherche}
           />
         </View>
+        {config.stockActif && (
+          <TouchableOpacity
+            style={styles.historiqueButton}
+            onPress={() => navigation.navigate('HistoriqueMouvements')}
+          >
+            <Ionicons name="time-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
         {isGerant && (
           <TouchableOpacity
             style={styles.addButton}
@@ -76,7 +84,7 @@ export function StockListScreen(): React.JSX.Element {
                 onPress={isGerant ? () => navigation.navigate('ProduitForm', { produitId: item.id }) : undefined}
               />
             </View>
-            {isGerant && config.stockActif && (
+            {config.stockActif && (
               <TouchableOpacity
                 style={styles.stockButton}
                 onPress={() =>
@@ -119,6 +127,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     color: colors.text,
+  },
+  historiqueButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 44,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
   },
   addButton: {
     flexDirection: 'row',

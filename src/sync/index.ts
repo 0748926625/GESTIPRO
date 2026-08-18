@@ -18,6 +18,7 @@ const TABLES: TableSyncConfig[] = [
   { nom: 'ventes' },
   { nom: 'vente_lignes' },
   { nom: 'operations_caisse' },
+  { nom: 'notifications', champsBooleens: ['lue'] },
   { nom: 'clotures', champsJson: ['top_produits', 'repartition_paiement'] },
   { nom: 'fournisseurs', champsBooleens: ['actif'] },
 ];

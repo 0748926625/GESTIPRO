@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { getSecteurConfig } from '../data/secteurs';
-import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
+import { DashboardStack } from './DashboardStack';
 import { useEtablissementStore } from '../store/etablissementStore';
 import { StockStack } from './StockStack';
 import { VentesStack } from './VentesStack';
@@ -38,7 +38,7 @@ export function GerantTabs(): React.JSX.Element {
         ),
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Accueil' }} />
+      <Tab.Screen name="Dashboard" component={DashboardStack} options={{ title: 'Accueil' }} />
       <Tab.Screen
         name="Stock"
         component={StockStack}

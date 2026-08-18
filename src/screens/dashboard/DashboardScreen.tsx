@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '../../components/EmptyState';
 import { StatCard } from '../../components/StatCard';
 import { getSecteurConfig } from '../../data/secteurs';
+import { getNombreNotificationsNonLues } from '../../db/notifications';
 import { getProduitsStockBas } from '../../db/produits';
 import { getChiffreAffaires, getNombreVentes } from '../../db/rapports';
 import { useAuthStore } from '../../store/authStore';
@@ -26,12 +27,14 @@ export function DashboardScreen(): React.JSX.Element {
   const [chiffreAffaires, setChiffreAffaires] = useState(0);
   const [nombreVentes, setNombreVentes] = useState(0);
   const [produitsAlerte, setProduitsAlerte] = useState<Produit[]>([]);
+  const [notificationsNonLues, setNotificationsNonLues] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       const debutJour = startOfDay(new Date()).toISOString();
       getChiffreAffaires(debutJour).then(setChiffreAffaires);
       getNombreVentes(debutJour).then(setNombreVentes);
+      getNombreNotificationsNonLues().then(setNotificationsNonLues);
       if (config.stockActif) {
         getProduitsStockBas().then(setProduitsAlerte);
       }
@@ -55,10 +58,25 @@ export function DashboardScreen(): React.JSX.Element {
               <Text style={styles.sousTitre}>{nomMaquis}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.deconnexionBtn} onPress={logout}>
-            <Ionicons name="log-out-outline" size={16} color={colors.primary} />
-            <Text style={styles.deconnexion}>Déconnexion</Text>
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.notificationBtn}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Ionicons name="notifications-outline" size={20} color={colors.primary} />
+              {notificationsNonLues > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {notificationsNonLues > 9 ? '9+' : notificationsNonLues}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deconnexionBtn} onPress={logout}>
+              <Ionicons name="log-out-outline" size={16} color={colors.primary} />
+              <Text style={styles.deconnexion}>Déconnexion</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.statsRow}>
@@ -143,6 +161,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  notificationBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
   },
   deconnexionBtn: {
     flexDirection: 'row',

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHeader } from '../../components/BackHeader';
+import { creerNotification } from '../../db/notifications';
 import { enregistrerMouvementStock } from '../../db/produits';
 import type { StockStackParamList } from '../../navigation/StockStack';
 import { useAuthStore } from '../../store/authStore';
@@ -52,6 +53,14 @@ export function MouvementStockScreen(): React.JSX.Element {
         motif.trim() || 'Livraison',
         currentUser.id
       );
+      if (currentUser.role === 'serveur') {
+        creerNotification(etablissementId, {
+          type: 'stock',
+          titre: 'Recharge de stock',
+          message: `${currentUser.nom} a ajouté ${qte} ${nomProduit} au stock${motif.trim() ? ` (${motif.trim()})` : ''}.`,
+          userId: currentUser.id,
+        }).catch(() => {});
+      }
       Alert.alert('Enregistré', `Entrée de ${qte} ${nomProduit} enregistrée.`);
       if (alerte) {
         declencherAlerteStock(alerte);

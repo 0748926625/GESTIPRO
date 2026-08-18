@@ -89,6 +89,21 @@ export async function migrate(): Promise<void> {
   if (!colonnesVentes.some((c) => c.name === 'commission_montant')) {
     await db.execAsync(`ALTER TABLE ventes ADD COLUMN commission_montant REAL;`);
   }
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      etablissement_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      titre TEXT NOT NULL,
+      message TEXT NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      lue INTEGER NOT NULL DEFAULT 0,
+      date TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_notifications_date ON notifications(date);
+  `);
 }
 
 // Vide les données locales propres à l'établissement actif (avant de basculer
@@ -100,6 +115,7 @@ export async function viderDonneesEtablissement(): Promise<void> {
     DELETE FROM ventes;
     DELETE FROM mouvements_stock;
     DELETE FROM operations_caisse;
+    DELETE FROM notifications;
     DELETE FROM clotures;
     DELETE FROM fournisseurs;
     DELETE FROM laveurs;

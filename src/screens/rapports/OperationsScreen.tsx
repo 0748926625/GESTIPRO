@@ -19,6 +19,7 @@ import { BackHeader } from '../../components/BackHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { SelectField } from '../../components/SelectField';
 import { CATEGORIES_DEPENSES, CATEGORIES_RECETTES } from '../../data/categoriesOperations';
+import { creerNotification } from '../../db/notifications';
 import { creerOperation, getOperations, supprimerOperation } from '../../db/operations';
 import { useAuthStore } from '../../store/authStore';
 import { useSessionStore } from '../../store/sessionStore';
@@ -27,6 +28,7 @@ import type { OperationCaisse, TypeOperation } from '../../types';
 
 export function OperationsScreen(): React.JSX.Element {
   const navigation = useNavigation();
+  const canGoBack = navigation.canGoBack();
   const currentUser = useAuthStore((s) => s.currentUser);
   const etablissementId = useSessionStore((s) => s.etablissementId);
   const [operations, setOperations] = useState<OperationCaisse[]>([]);
@@ -69,6 +71,14 @@ export function OperationsScreen(): React.JSX.Element {
         description: description.trim(),
         userId: currentUser.id,
       });
+      if (currentUser.role === 'serveur') {
+        creerNotification(etablissementId, {
+          type,
+          titre: type === 'depense' ? 'Dépense enregistrée' : 'Recette enregistrée',
+          message: `${currentUser.nom} a enregistré une ${type === 'depense' ? 'dépense' : 'recette'} de ${montantNombre.toLocaleString('fr-FR')} F (${categorie}).`,
+          userId: currentUser.id,
+        }).catch(() => {});
+      }
       setCategorie('');
       setMontant('');
       setDescription('');
@@ -103,7 +113,11 @@ export function OperationsScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <BackHeader title="Recettes & dépenses" onBack={() => navigation.goBack()} />
+      <BackHeader
+        title="Recettes & dépenses"
+        onBack={() => navigation.goBack()}
+        showBack={canGoBack}
+      />
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.formCard}>

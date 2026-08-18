@@ -36,6 +36,11 @@ export interface MouvementStock {
   date: string;
 }
 
+export interface MouvementStockDetail extends MouvementStock {
+  nomProduit: string;
+  nomUser: string;
+}
+
 export interface Vente {
   id: string;
   userId: string;
@@ -122,6 +127,19 @@ export interface AlerteStock {
   quantiteStock: number;
   seuilAlerte: number;
   unite: string;
+}
+
+export type TypeNotification = 'stock' | 'depense' | 'recette';
+
+export interface Notification {
+  id: string;
+  type: TypeNotification;
+  titre: string;
+  message: string;
+  userId: string;
+  nomUser: string;
+  lue: boolean;
+  date: string;
 }
 
 export interface Cloture {

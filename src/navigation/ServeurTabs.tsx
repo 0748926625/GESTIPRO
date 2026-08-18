@@ -5,9 +5,15 @@ import { getSecteurConfig } from '../data/secteurs';
 import { useEtablissementStore } from '../store/etablissementStore';
 import { VentesStack } from './VentesStack';
 import { StockStack } from './StockStack';
+import { CaisseStack } from './CaisseStack';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
+
+const ICONES: Record<string, keyof typeof Ionicons.glyphMap> = {
+  Ventes: 'cash-outline',
+  Operations: 'swap-vertical-outline',
+};
 
 export function ServeurTabs(): React.JSX.Element {
   const secteur = useEtablissementStore((s) => s.secteur);
@@ -21,7 +27,7 @@ export function ServeurTabs(): React.JSX.Element {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarIcon: ({ color, size }) => (
           <Ionicons
-            name={route.name === 'Stock' ? config.icone : 'cash-outline'}
+            name={route.name === 'Stock' ? config.icone : ICONES[route.name]}
             color={color}
             size={size}
           />
@@ -39,6 +45,7 @@ export function ServeurTabs(): React.JSX.Element {
               config.libelleArticlePluriel.slice(1),
         }}
       />
+      <Tab.Screen name="Operations" component={CaisseStack} options={{ title: 'Opérations' }} />
     </Tab.Navigator>
   );
 }

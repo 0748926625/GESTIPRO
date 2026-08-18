@@ -4,6 +4,7 @@ import { getSecteurConfig } from '../data/secteurs';
 import { StockListScreen } from '../screens/stock/StockListScreen';
 import { ProduitFormScreen } from '../screens/stock/ProduitFormScreen';
 import { MouvementStockScreen } from '../screens/stock/MouvementStockScreen';
+import { HistoriqueMouvementsScreen } from '../screens/stock/HistoriqueMouvementsScreen';
 import { useEtablissementStore } from '../store/etablissementStore';
 import { colors } from '../theme';
 
@@ -11,6 +12,7 @@ export type StockStackParamList = {
   StockList: undefined;
   ProduitForm: { produitId?: string };
   MouvementStock: { produitId: string; nomProduit: string };
+  HistoriqueMouvements: undefined;
 };
 
 const Stack = createNativeStackNavigator<StockStackParamList>();
@@ -34,6 +36,11 @@ export function StockStack(): React.JSX.Element {
       <Stack.Screen
         name="MouvementStock"
         component={MouvementStockScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="HistoriqueMouvements"
+        component={HistoriqueMouvementsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

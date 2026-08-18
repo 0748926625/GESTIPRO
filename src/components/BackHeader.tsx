@@ -6,15 +6,18 @@ import { colors, spacing } from '../theme';
 interface BackHeaderProps {
   title: string;
   onBack: () => void;
+  showBack?: boolean;
 }
 
-export function BackHeader({ title, onBack }: BackHeaderProps): React.JSX.Element {
+export function BackHeader({ title, onBack, showBack = true }: BackHeaderProps): React.JSX.Element {
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={8}>
-        <Ionicons name="chevron-back" size={24} color={colors.primary} />
-      </TouchableOpacity>
-      <Text style={styles.title} numberOfLines={1}>
+      {showBack && (
+        <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      )}
+      <Text style={[styles.title, !showBack && styles.titleSansBack]} numberOfLines={1}>
         {title}
       </Text>
     </View>
@@ -40,5 +43,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginLeft: spacing.xs,
+  },
+  titleSansBack: {
+    marginLeft: spacing.sm,
   },
 });
