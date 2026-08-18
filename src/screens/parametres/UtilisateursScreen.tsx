@@ -27,6 +27,7 @@ import { createFournisseur, getFournisseurs, setFournisseurActif } from '../../d
 import { createLaveur, getLaveurs, setLaveurActif } from '../../db/laveurs';
 import { createUser, getAllUsers, setUserActive, updateUserPin } from '../../db/users';
 import { getDerniereSynchro, synchroniser } from '../../sync';
+import { diagnostiquerSyncProduits } from '../../sync/debug';
 import type { ParametresStackParamList } from '../../navigation/ParametresStack';
 import { useAuthStore } from '../../store/authStore';
 import { useEtablissementStore } from '../../store/etablissementStore';
@@ -122,6 +123,19 @@ export function UtilisateursScreen(): React.JSX.Element {
     } finally {
       setSyncEnCours(false);
     }
+  };
+
+  const handleDiagnostiquer = async (): Promise<void> => {
+    const d = await diagnostiquerSyncProduits();
+    Alert.alert(
+      'Diagnostic stock',
+      [
+        `Dernier envoi réussi : ${d.dernierEnvoi ?? 'jamais'}`,
+        `Produit le plus récent (local) : ${d.produitsMaxUpdatedAt ?? 'aucun'}`,
+        `Produits enregistrés en local : ${d.produitsNombreTotal}`,
+        `Produits qui seraient envoyés au prochain sync : ${d.produitsAPousser}`,
+      ].join('\n')
+    );
   };
 
   const handleChoisirLogo = async (): Promise<void> => {
@@ -303,6 +317,16 @@ export function UtilisateursScreen(): React.JSX.Element {
               </View>
             </View>
           )}
+
+          <TouchableOpacity style={styles.syncCard} onPress={handleDiagnostiquer}>
+            <View style={styles.syncCardLeft}>
+              <Ionicons name="bug-outline" size={20} color={colors.primary} />
+              <View>
+                <Text style={styles.syncCardTitle}>Diagnostic stock</Text>
+                <Text style={styles.syncCardSubtitle}>Voir l'état exact de la synchro du stock</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <View style={[styles.syncCard, { borderColor: COULEURS_TEMPS_REEL[statutTempsReel] }]}>
             <View style={styles.syncCardLeft}>
